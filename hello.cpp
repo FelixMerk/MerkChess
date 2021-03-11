@@ -33,5 +33,10 @@ int test_fen() {
 int main() {
 	std::cout << "Hello World\n";
 	//board.printBoard();
+	Board board;
+	std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+	board.fromFen(fen);
+	std::tuple<int, int> king_pos = board.findKing();
+	std::cout << board.numToChar(std::get<1>(king_pos)) << 8 - std::get<0>(king_pos) << "\n";
 	return test_fen();
 }

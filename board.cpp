@@ -76,6 +76,56 @@ std::string Board::getPiece(char piece) {
 	return color + " " + piece_name;
 }
 
+
+std::string Board::numToChar(int j) {
+	char character = 'a' + j;
+	std::string letter = "";
+	letter += character;
+	return letter;
+}
+
+
+std::tuple<int, int> Board::findKing() {
+	for (int i = 0; i < 8; i++){
+		for (int j = 0; j<8; j++){
+			unsigned char piece = board[i][j];
+			if (piece){
+				int pass;
+				if (to_play == 0) {
+					pass = (piece == (king | white));
+				} else {
+					pass = (piece == (king | black));
+				}
+
+				if (pass) {
+					return std::tuple<int, int>(i,j);
+				}
+
+				// We have a piece.  It may be able to move.
+			}
+		}
+	}
+	// No King
+	return std::tuple<int, int>(-1,-1);
+}
+
+
+
+std::vector<int> Board::getMoves() {
+	for (int i = 0; i < 8; i++){
+		for (int j = 0; j<8; j++){
+			unsigned char piece = board[i][j];
+			if (piece){
+				// We have a piece.  It may be able to move.
+				std::vector<int> v = { 7, 5, 6, 8 };
+				return v;
+			}
+		}
+	}
+	std::vector<int> v = { 7, 5, 6, 8 };
+	return v;
+}
+
 		
 std::string Board::pieceToFen(char piece) {
 	switch(piece) {

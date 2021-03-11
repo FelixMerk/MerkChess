@@ -2,6 +2,8 @@
 #define Board_H
 
 #include <string>
+#include <tuple>
+#include <vector>
 
 class Board
 {
@@ -33,6 +35,9 @@ class Board
 		void fromFen(std::string fen);
 		std::string toFen();
 		std::string pieceToFen(char piece);
+		std::vector<int> getMoves();
+		std::tuple<int,int> findKing();
+		std::string numToChar(int j);
 
 		enum Pieces
 		{
