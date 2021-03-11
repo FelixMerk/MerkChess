@@ -85,7 +85,7 @@ std::string Board::numToChar(int j) {
 }
 
 
-std::tuple<int, int> Board::findKing() {
+tsquare Board::findKing() {
 	for (int i = 0; i < 8; i++){
 		for (int j = 0; j<8; j++){
 			unsigned char piece = board[i][j];
@@ -111,18 +111,25 @@ std::tuple<int, int> Board::findKing() {
 
 
 
-std::vector<int> Board::getMoves() {
+std::vector<tsquare> Board::getPieces() {
+	std::vector<tsquare> locations = {};
 	for (int i = 0; i < 8; i++){
 		for (int j = 0; j<8; j++){
 			unsigned char piece = board[i][j];
 			if (piece){
 				// We have a piece.  It may be able to move.
-				std::vector<int> v = { 7, 5, 6, 8 };
-				return v;
+				locations.push_back(tsquare(i,j));
 			}
 		}
 	}
-	std::vector<int> v = { 7, 5, 6, 8 };
+	return locations;
+}
+
+
+std::vector<tmove> Board::getMoves() {
+	std::vector<tmove> moves = {};
+	std::vector<tsquare> locations = getPieces();
+	moves.push_back(tmove(tsquare(0,0), tsquare(0,1), 0));
 	return v;
 }
 

@@ -27,6 +27,10 @@ class Board
 		unsigned char black;
 		*/
 	public:
+		typedef std::tuple<int, int> tsquare;
+		typedef unsigned char tpiece;
+		// piece in move for promotions
+		typedef std::tuple<tsquare, tsquare, tpiece> tmove;
 		unsigned char board[8][8];
 
 		void clearBoard();
@@ -35,8 +39,8 @@ class Board
 		void fromFen(std::string fen);
 		std::string toFen();
 		std::string pieceToFen(char piece);
-		std::vector<int> getMoves();
-		std::tuple<int,int> findKing();
+		std::vector<tmove> getMoves();
+		square findKing();
 		std::string numToChar(int j);
 
 		enum Pieces
