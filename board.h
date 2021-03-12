@@ -50,6 +50,9 @@ class Board
 
 		std::vector<tmove> stripIllegal(std::vector<tmove> moves);
 		std::vector<tmove> getKnightMoves(tsquare square);
+		std::vector<tmove> getBishopMoves(tsquare square);
+		std::vector<tmove> getRookMoves(tsquare square);
+		std::vector<tmove> getQueenMoves(tsquare square);
 
 		enum Pieces
 		{

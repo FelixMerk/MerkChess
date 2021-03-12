@@ -168,6 +168,85 @@ std::vector<tmove> Board::getKnightMoves(tsquare square) {
 }
 
 
+std::vector<tmove> Board::getBishopMoves(tsquare square) {
+	std::vector<tmove> moves = {};
+	int i = std::get<0>(square);
+	int j = std::get<1>(square);
+
+	auto extend = [&](int ibound, int jbound, int iinc, int jinc) {
+		int i2 = i;
+		int j2 = j;
+		while (i2 != ibound and j2 != jbound) {
+			i2 += iinc;
+			j2 += jinc;
+			tpiece destination = board[i2][j2];
+			if (destination) {
+				if (to_play == (to_play & destination)) {
+					// Blocked by our piece
+					break;
+				} else {
+					// Opponents piece
+					moves.push_back(tmove(square, tsquare(i2, j2), 0));
+					break;
+				}
+			} else {
+				moves.push_back(tmove(square, tsquare(i2, j2), 0));
+			}
+		}
+	};
+
+	extend(7, 7, 1, 1);
+	extend(7, 0, 1, -1);
+	extend(0, 7, -1, 1);
+	extend(0, 0, -1, -1);
+
+	return moves;
+}
+
+std::vector<tmove> Board::getRookMoves(tsquare square) {
+	std::vector<tmove> moves = {};
+	int i = std::get<0>(square);
+	int j = std::get<1>(square);
+
+	auto extend = [&](int ibound, int jbound, int iinc, int jinc) {
+		int i2 = i;
+		int j2 = j;
+		while (i2 != ibound and j2 != jbound) {
+			i2 += iinc;
+			j2 += jinc;
+			tpiece destination = board[i2][j2];
+			if (destination) {
+				if (to_play == (to_play & destination)) {
+					// Blocked by our piece
+					break;
+				} else {
+					// Opponents piece
+					moves.push_back(tmove(square, tsquare(i2, j2), 0));
+					break;
+				}
+			} else {
+				moves.push_back(tmove(square, tsquare(i2, j2), 0));
+			}
+		}
+	};
+
+	extend(7, -1, 1, 0);
+	extend(0, -1, -1, 0);
+	extend(-1, 7, 0, 1);
+	extend(-1, 0, 0, -1);
+
+	return moves;
+}
+
+std::vector<tmove> Board::getQueenMoves(tsquare square) {
+	std::vector<tmove> moves = {};
+	moves = getBishopMoves(square);
+	new_moves = getRookMoves(square);
+	moves.insert(moves.end(), new_moves.begin(), new_moves.end());
+	return moves;
+}
+
+
 std::vector<tmove> Board::getMoves() {
 	std::vector<tmove> moves = {};
 	std::vector<tsquare> locations = getPieces();
@@ -178,12 +257,18 @@ std::vector<tmove> Board::getMoves() {
 		tpiece piece = board[i][j];
 		switch(piece ^ to_play) {
 			//case pawn: return "P";
-			//case bishop: return "B";
+			case bishop: 
+				new_moves = getBishopMoves(square);
+				break;
 			case knight: 
 				new_moves = getKnightMoves(square);
 				break;
-			//case rook: return "R";
-			//case queen: return "Q";
+			case rook:
+				new_moves = getRookMoves(square);
+				break;
+			case queen:
+				new_moves = getQueenMoves(square);
+				break;
 			//case king: return "K";
 			default: break;
 		}
