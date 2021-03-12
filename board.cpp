@@ -6,7 +6,7 @@
 
 void Board::clearBoard() {
 	// puts some pieces on a board
-	to_play = 0;
+	to_play = white;
 	white_kingside = 0;
 	white_queenside = 0;
 	black_kingside = 0;
@@ -84,6 +84,13 @@ std::string Board::numToChar(int j) {
 	return letter;
 }
 
+std::string Board::getSquare(tsquare square) {
+	std::string square_string = "";
+	square_string += numToChar(std::get<1>(square));
+	square_string += std::to_string(8 - std::get<0>(square));
+	return square_string;
+}
+
 
 tsquare Board::findKing() {
 	for (int i = 0; i < 8; i++){
@@ -91,11 +98,7 @@ tsquare Board::findKing() {
 			unsigned char piece = board[i][j];
 			if (piece){
 				int pass;
-				if (to_play == 0) {
-					pass = (piece == (king | white));
-				} else {
-					pass = (piece == (king | black));
-				}
+				pass = (piece == (king | to_play));
 
 				if (pass) {
 					return std::tuple<int, int>(i,j);
@@ -117,20 +120,76 @@ std::vector<tsquare> Board::getPieces() {
 		for (int j = 0; j<8; j++){
 			unsigned char piece = board[i][j];
 			if (piece){
-				// We have a piece.  It may be able to move.
-				locations.push_back(tsquare(i,j));
+				if (to_play == (piece & to_play)) {
+					// We have a piece of the right color
+					locations.push_back(tsquare(i,j));
+				}
 			}
 		}
 	}
 	return locations;
 }
 
+std::vector<tmove> Board::stripIllegal(std::vector<tmove> moves) {
+	std::vector<tmove> legal_moves = {};
+	for (tmove move : moves) {
+		tsquare square = std::get<1>(move);
+		int i = std::get<0>(square);
+		int j = std::get<1>(square);
+		if (i < 0 or i > 7 or j < 0 or j > 7) {
+			continue;
+		}
+		unsigned char destination = board[i][j];
+		if (destination) {
+			if (to_play == (to_play & destination)) {
+				continue;
+			}
+		}
+		legal_moves.push_back(move);
+	}
+
+	return legal_moves;
+}
+
+
+std::vector<tmove> Board::getKnightMoves(tsquare square) {
+	std::vector<tmove> moves = {};
+	int i = std::get<0>(square);
+	int j = std::get<1>(square);
+	std::vector<int> hop = {-1,1};
+	std::vector<int> jump = {-2,2};
+	for (int a : hop) {
+		for (int b : jump) {
+			moves.push_back(tmove(square, tsquare(i+a, j+b), 0));
+			moves.push_back(tmove(square, tsquare(i+b, j+a), 0));
+		}
+	}
+	return stripIllegal(moves);
+}
+
 
 std::vector<tmove> Board::getMoves() {
 	std::vector<tmove> moves = {};
 	std::vector<tsquare> locations = getPieces();
-	moves.push_back(tmove(tsquare(0,0), tsquare(0,1), 0));
-	return v;
+	for (tsquare square : locations) {
+		std::vector<tmove> new_moves;
+		int i = std::get<0>(square);
+		int j = std::get<1>(square);
+		tpiece piece = board[i][j];
+		switch(piece ^ to_play) {
+			//case pawn: return "P";
+			//case bishop: return "B";
+			case knight: 
+				new_moves = getKnightMoves(square);
+				break;
+			//case rook: return "R";
+			//case queen: return "Q";
+			//case king: return "K";
+			default: break;
+		}
+		moves.insert(moves.end(), new_moves.begin(), new_moves.end());
+	}
+	return moves;
 }
 
 		
@@ -177,7 +236,7 @@ std::string Board::toFen() {
 			fen = fen + "/";
 		}
 	}
-	if (to_play == 0) {
+	if (to_play == white) {
 		fen = fen + " w";
 	} else {
 		fen = fen + " b";
@@ -224,10 +283,10 @@ void Board::fromFen(std::string fen) {
 		if (piece_end) {
 		switch(c) {
 			case 'w':
-				to_play = 0;
+				to_play = white;
 				break;
 			case 'b':
-				to_play = 1;
+				to_play = black;
 				break;
 			case 'K':
 				white_kingside = 1;

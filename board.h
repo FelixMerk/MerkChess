@@ -5,6 +5,11 @@
 #include <tuple>
 #include <vector>
 
+typedef std::tuple<int, int> tsquare;
+typedef unsigned char tpiece;
+// piece in move for promotions
+typedef std::tuple<tsquare, tsquare, tpiece> tmove;
+
 class Board
 {
 	private:
@@ -27,10 +32,6 @@ class Board
 		unsigned char black;
 		*/
 	public:
-		typedef std::tuple<int, int> tsquare;
-		typedef unsigned char tpiece;
-		// piece in move for promotions
-		typedef std::tuple<tsquare, tsquare, tpiece> tmove;
 		unsigned char board[8][8];
 
 		void clearBoard();
@@ -39,9 +40,16 @@ class Board
 		void fromFen(std::string fen);
 		std::string toFen();
 		std::string pieceToFen(char piece);
+
+		std::vector<tsquare> getPieces();
 		std::vector<tmove> getMoves();
-		square findKing();
+		tsquare findKing();
+
 		std::string numToChar(int j);
+		std::string getSquare(tsquare square);
+
+		std::vector<tmove> stripIllegal(std::vector<tmove> moves);
+		std::vector<tmove> getKnightMoves(tsquare square);
 
 		enum Pieces
 		{
