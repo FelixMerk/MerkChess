@@ -53,6 +53,8 @@ class Board
 		std::vector<tmove> getBishopMoves(tsquare square);
 		std::vector<tmove> getRookMoves(tsquare square);
 		std::vector<tmove> getQueenMoves(tsquare square);
+		std::vector<tmove> getPawnMoves(tsquare square);
+		std::vector<tmove> getKingMoves(tsquare square);
 
 		enum Pieces
 		{

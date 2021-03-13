@@ -239,13 +239,108 @@ std::vector<tmove> Board::getRookMoves(tsquare square) {
 }
 
 std::vector<tmove> Board::getQueenMoves(tsquare square) {
-	std::vector<tmove> moves = {};
+	std::vector<tmove> moves;
+	std::vector<tmove> new_moves;
 	moves = getBishopMoves(square);
 	new_moves = getRookMoves(square);
 	moves.insert(moves.end(), new_moves.begin(), new_moves.end());
 	return moves;
 }
 
+std::vector<tmove> Board::getPawnMoves(tsquare square) {
+	std::vector<tmove> moves = {};
+	int i = std::get<0>(square);
+	int j = std::get<1>(square);
+
+	auto sub_pawn = [&](int iinc, int jinc, int start, int promo) {
+		tpiece blocker = board[i+iinc][j+jinc];
+		if (jinc != 0) {
+			// Invert blocker for opponent's pieces
+			if (blocker){
+				if (to_play != (blocker & to_play)) {
+					blocker = 0;
+				} else {
+					blocker = 1;
+				}
+			} else {
+				blocker = 1;
+			}
+
+			std::string sq_name = getSquare(tsquare(i+iinc, j+jinc));
+			// Take en_passent
+			// en_passent square is always empty
+			if (sq_name == en_passent) {
+				blocker = 0;
+			}
+		}
+
+		if (!blocker) {
+			if ((i == start) and (jinc == 0)) {
+				// Starting square
+				moves.push_back(tmove(square, tsquare(i+iinc, j), 0));
+				if (!board[i+2*iinc][j]) {
+					// Move 2 and allow en passent
+					moves.push_back(
+						tmove(square, tsquare(i+2*iinc, j), 0)
+					);
+				}
+			} else if (i == promo) {
+				// Promotion square
+				moves.push_back(
+					tmove(square, tsquare(i+iinc, j+jinc),
+						white | queen));
+				moves.push_back(
+					tmove(square, tsquare(i+iinc, j+jinc),
+						white | bishop));
+				moves.push_back(
+					tmove(square, tsquare(i+iinc, j+jinc),
+						white | knight));
+				moves.push_back(
+					tmove(square, tsquare(i+iinc, j+jinc),
+						white | rook));
+			} else {
+				moves.push_back(tmove(square, tsquare(i+iinc, j+jinc), 0));
+			}
+		}
+	};
+
+	if (to_play == white) {
+		sub_pawn(-1, 0, 6, 1);
+		if (j!=0) {
+			sub_pawn(-1, -1, 6, -1);
+		}
+		if (j!=7) {
+			sub_pawn(-1, 1, 6, -1);
+		}
+	} else {
+		sub_pawn(1, 0, 1, 6);
+		if (j!=0) {
+			sub_pawn(1, -1, -1, 6);
+		}
+		if (j!=7) {
+			sub_pawn(1, 1, -1, 6);
+		}
+	}
+
+	return moves;
+
+}
+
+std::vector<tmove> Board::getKingMoves(tsquare square) {
+	std::vector<tmove> moves = {};
+	int i = std::get<0>(square);
+	int j = std::get<1>(square);
+
+	std::vector<int> hop = {-1,0,1};
+	for (int a : hop) {
+		for (int b : hop) {
+			if (a != 0 or a != b) {
+				moves.push_back(tmove(square, tsquare(i+a, j+b), 0));
+			}
+		}
+	}
+	return stripIllegal(moves);
+}
 
 std::vector<tmove> Board::getMoves() {
 	std::vector<tmove> moves = {};
@@ -256,7 +351,9 @@ std::vector<tmove> Board::getMoves() {
 		int j = std::get<1>(square);
 		tpiece piece = board[i][j];
 		switch(piece ^ to_play) {
-			//case pawn: return "P";
+			case pawn:
+				new_moves = getPawnMoves(square);
+				break;
 			case bishop: 
 				new_moves = getBishopMoves(square);
 				break;
@@ -269,7 +366,9 @@ std::vector<tmove> Board::getMoves() {
 			case queen:
 				new_moves = getQueenMoves(square);
 				break;
-			//case king: return "K";
+			case king: 
+				new_moves = getKingMoves(square);
+				break;
 			default: break;
 		}
 		moves.insert(moves.end(), new_moves.begin(), new_moves.end());
@@ -313,11 +412,13 @@ std::string Board::toFen() {
 				empty_count++;
 			}
 		}
+
+		if (empty_count) {
+			fen = fen + std::to_string(empty_count);
+			empty_count = 0;
+		}
+
 		if (i != 7) {
-			if (empty_count) {
-				fen = fen + std::to_string(empty_count);
-				empty_count = 0;
-			}
 			fen = fen + "/";
 		}
 	}
@@ -359,6 +460,7 @@ std::string Board::toFen() {
 void Board::fromFen(std::string fen) {
 	clearBoard();
 	halfmove = -1;
+	to_play = 0;
 	std::string collecting_halfmoves = "";
 	// Sets Board to fen
 	int i = 0;
@@ -367,12 +469,6 @@ void Board::fromFen(std::string fen) {
 	for (char &c: fen){
 		if (piece_end) {
 		switch(c) {
-			case 'w':
-				to_play = white;
-				break;
-			case 'b':
-				to_play = black;
-				break;
 			case 'K':
 				white_kingside = 1;
 				break;
@@ -392,6 +488,15 @@ void Board::fromFen(std::string fen) {
 				}
 				collecting_halfmoves = "";
 				break;
+			case 'w':
+				to_play = white;
+				break;
+			case 'b':
+				if (to_play == 0) {
+					to_play = black;
+					break;
+				}
+				// Might be en passent, don't break
 			default:
 				if (isalpha(c)) {
 					en_passent = c;
