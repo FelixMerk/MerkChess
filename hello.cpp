@@ -8,7 +8,7 @@
 std::string fen_in1 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 std::string fen_in2 = "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2";
 std::string fen_in3 = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
-std::string fen_in4 = "k7/8/8/8/8/8/8/7K b KQkq - 20 31";
+std::string fen_in4 = "k7/8/8/8/8/8/8/7K b Qkq - 20 31";
 
 // White bishops and knight with restrictions
 std::string fen_in5 = "8/5p2/7p/p3P3/2B2B2/1N6/3P3P/8 w - - 0 1";
@@ -44,74 +44,107 @@ int test_fen() {
 	return status;
 }
 
-int test_knight_moves(){
+bool squares_in_moves(
+	std::set<std::string> s1,
+	std::vector<tmove> moves,
+	Board board
+) {
+	for (std::string key : s1) {
+		bool pass = false;
+		for (tmove move : moves) {
+			tsquare dest = std::get<1>(move);
+			if (board.getNameOfSquare(dest) == key) {
+				pass = true;
+				break;
+			}
+		}
+		if (!pass) {
+			std::cout << key << " is missing?\n";
+			return false;
+		}
+	}
+	return true;
+}
+
+bool piece_moves_in_squares(
+	std::vector<tmove> moves, tpiece piece, Board board, std::set<std::string> s1
+) {
+	for (tmove move : moves) {
+		tsquare source = std::get<0>(move);
+
+		tpiece mpiece = board.board[std::get<0>(source)][std::get<1>(source)];
+		if (mpiece == piece) {
+			tsquare dest = std::get<1>(move);
+			if (s1.count(board.getNameOfSquare(dest))) {
+				continue;
+			} else {
+				// bad square
+				std::cout << board.getPiece(piece) << " fail!\n";
+				std::cout << board.getNameOfSquare(dest) << " is included?\n";
+				return false;
+			}
+		}
+	}
+	return true;
+
+}
+
+bool test_knight_moves(){
+	bool pass = true;
+
 	Board board;
 	board.fromFen(fen_in1);
 
 	std::vector<tmove> moves = board.getMoves();
 
-	std::set<std::string> s1;
-	s1.insert("a3");
-	s1.insert("c3");
-	s1.insert("f3");
-	s1.insert("h3");
+	std::set<std::string> s1 = {"a3", "c3", "f3", "h3"};
 
-	for (tmove move : moves) {
-		tsquare source = std::get<0>(move);
-		tpiece piece = board.board[std::get<0>(source)][std::get<1>(source)];
-		if (piece == (Board::white | Board::knight)) {
-			tsquare dest = std::get<1>(move);
-			if (s1.count(board.getSquare(dest))) {
-				continue;
-			} else {
-				// bad square
-				std::cout << "Knight fail!\n";
-				return 1;
-			}
-		}
-	}
-	return 0;
+	pass = pass and piece_moves_in_squares(
+		moves,
+		Board::white | Board::knight,
+		board,
+		s1
+	);
+
+	pass = pass and squares_in_moves(
+		s1,
+		moves,
+		board
+	);
+
+	return pass;
 }
 
-int test_bishop_moves(){
+bool test_bishop_moves(){
+	bool pass = true;
+
 	Board board;
 	board.fromFen(fen_in5);
 
 	std::vector<tmove> moves = board.getMoves();
 
-	std::set<std::string> s1;
-	s1.insert("a6");
-	s1.insert("b5");
-	s1.insert("d5");
-	s1.insert("d3");
-	s1.insert("e6");
-	s1.insert("e3");
-	s1.insert("e2");
-	s1.insert("f7");
-	s1.insert("f1");
-	s1.insert("g5");
-	s1.insert("g3");
-	s1.insert("h6");
+	std::set<std::string> s1 = {"a6", "b5", "d5", "d3", "e6", "e3", "e2", "f7",
+		"f1", "g5", "g3", "h6"};
 
-	for (tmove move : moves) {
-		tsquare source = std::get<0>(move);
-		tpiece piece = board.board[std::get<0>(source)][std::get<1>(source)];
-		if (piece == (Board::white | Board::bishop)) {
-			tsquare dest = std::get<1>(move);
-			if (s1.count(board.getSquare(dest))) {
-				continue;
-			} else {
-				// bad square
-				std::cout << "Bishop fail!\n";
-				std::cout << board.getSquare(dest) << " is included?\n";
-				return 1;
-			}
-		}
-	}
-	return 0;
+	pass = pass and piece_moves_in_squares(
+		moves,
+		Board::white | Board::bishop,
+		board,
+		s1
+	);
+
+	pass = pass and squares_in_moves(
+		s1,
+		moves,
+		board
+	);
+
+	return pass;
 }
 
-int test_rook_moves(){
+bool test_rook_moves(){
+	bool pass = true;
+
 	Board board;
 	board.fromFen(fen_in6);
 
@@ -123,35 +156,26 @@ int test_rook_moves(){
 		"h8", "h7", "h6", "h5", "h4", "h3", "h1"
 	};
 
-	int count = 0;
+	pass = pass and piece_moves_in_squares(
+		moves,
+		Board::white | Board::rook,
+		board,
+		s1
+	);
 
-	for (tmove move : moves) {
-		tsquare source = std::get<0>(move);
-		tpiece piece = board.board[std::get<0>(source)][std::get<1>(source)];
-		if (piece == (Board::white | Board::rook)) {
-			count ++;
-			tsquare dest = std::get<1>(move);
-			if (s1.count(board.getSquare(dest))) {
-				continue;
-			} else {
-				// bad square
-				std::cout << "Rook fail!\n";
-				std::cout << board.getSquare(dest) << " is included?\n";
-				return 1;
-			}
-		}
-	}
-	if (count < s1.size()) {
-		std::cout << "Rook fail!\n";
-		std::cout << "Too few squares!\n";
-		return 1;
-	}
+	pass = pass and squares_in_moves(
+		s1,
+		moves,
+		board
+	);
 
-	return 0;
+	return pass;
 }
 
 
-int test_pawn_moves(){
+bool test_pawn_moves(){
+	bool pass = true;
+
 	Board board;
 	board.fromFen(fen_in7);
 
@@ -160,49 +184,36 @@ int test_pawn_moves(){
 	std::set<std::string> s1;
 	s1 = {"a3", "b6", "b4", "b3", "c3", "d8", "e5", "g4", "h4"};
 
-	int count = 0;
+	pass = pass and piece_moves_in_squares(
+		moves,
+		Board::white | Board::pawn,
+		board,
+		s1
+	);
 
-	for (tmove move : moves) {
-		tsquare source = std::get<0>(move);
-		tsquare dest = std::get<1>(move);
+	pass = pass and squares_in_moves(
+		s1,
+		moves,
+		board
+	);
 
-		tpiece piece = board.board[std::get<0>(source)][std::get<1>(source)];
-		if (piece == (Board::white | Board::pawn)) {
-			count ++;
-			tsquare dest = std::get<1>(move);
-			if (s1.count(board.getSquare(dest))) {
-				continue;
-			} else {
-				// bad square
-				std::cout << "Pawn fail!\n";
-				std::cout << board.getSquare(dest) << " is included?\n";
-				return 1;
-			}
-		}
-	}
-	if (count < s1.size()) {
-		std::cout << "Pawn fail!\n";
-		std::cout << "Too few squares!\n";
-		std::cout << count << "\n";
-		return 1;
-	}
-
-	return 0;
+	return pass;
 }
 
-int test_king_pos(){
+bool test_king_pos(){
 	Board board;
 	board.fromFen(fen_in1);
 	tsquare king_pos = board.findKing();
-	if ("e1" == board.getSquare(king_pos)){
-		return 0;
+	if ("e1" == board.getNameOfSquare(king_pos)){
+		return true;
 	} else {
 		std::cout << "King fail!\n";
-		return 1;
+		return false;
 	}
 }
 
-int test_king_moves(){
+bool test_king_moves(){
+	bool pass = true;
 	Board board;
 	board.fromFen(fen_in8);
 
@@ -213,33 +224,66 @@ int test_king_moves(){
 		"c1", "e3", "e1"
 	};
 
-	int count = 0;
+	pass = pass and piece_moves_in_squares(
+		moves,
+		Board::white | Board::king,
+		board,
+		s1
+	);
 
-	for (tmove move : moves) {
-		tsquare source = std::get<0>(move);
+	pass = pass and squares_in_moves(
+		s1,
+		moves,
+		board
+	);
 
-		tpiece piece = board.board[std::get<0>(source)][std::get<1>(source)];
-		if (piece == (Board::white | Board::king)) {
-			count ++;
-			tsquare dest = std::get<1>(move);
-			if (s1.count(board.getSquare(dest))) {
-				continue;
-			} else {
-				// bad square
-				std::cout << "King fail!\n";
-				std::cout << board.getSquare(dest) << " is included?\n";
-				return 1;
-			}
-		}
-	}
-	if (count < s1.size()) {
-		std::cout << "King fail!\n";
-		std::cout << "Too few squares!\n";
-		std::cout << count << "\n";
-		return 1;
-	}
+	return pass;
+}
 
-	return 0;
+
+bool test_castle_moves(){
+	bool pass = true;
+
+	std::string fen_c1 = "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1";
+	std::string fen_c2 = "r3k2r/8/8/8/8/8/8/R3K2R w Qkq - 0 1";
+	std::string fen_c3 = "r3k2r/8/8/8/8/8/8/R3K2R w kq - 0 1";
+
+	Board board;
+
+	// 1
+	board.fromFen(fen_c1);
+	std::vector<tmove> moves = board.getMoves();
+
+	std::set<std::string> s1 = {"c1", "g1"};
+
+	pass = pass and squares_in_moves(
+		s1,
+		moves,
+		board
+	);
+
+	// 2
+	board.fromFen(fen_c2);
+	moves = board.getMoves();
+
+	std::set<std::string> s2 = {"c1",
+		"d2", "d1", "e2", "f2", "f1"
+	};
+
+	pass = pass and piece_moves_in_squares(
+		moves,
+		Board::white | Board::king,
+		board,
+		s2
+	);
+
+	pass = pass and squares_in_moves(
+		s2,
+		moves,
+		board
+	);
+
+	return pass;
 }
 
 int main() {
@@ -250,12 +294,13 @@ int main() {
 	board.fromFen(fen_in1);
 	//std::vector<tmove> moves = board.getMoves();
 
-	//pass += test_fen();
-	//pass += test_knight_moves();
-	//pass += test_bishop_moves();
-	//pass += test_king_pos();
-	//pass += test_rook_moves();
-	//pass += test_pawn_moves();
+	pass += test_fen();
+	pass += test_knight_moves();
+	pass += test_bishop_moves();
+	pass += test_king_pos();
+	pass += test_rook_moves();
+	pass += test_pawn_moves();
 	pass += test_king_moves();
+	pass += test_castle_moves();
 	return pass;
 }

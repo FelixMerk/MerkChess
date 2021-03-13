@@ -84,11 +84,17 @@ std::string Board::numToChar(int j) {
 	return letter;
 }
 
-std::string Board::getSquare(tsquare square) {
+std::string Board::getNameOfSquare(tsquare square) {
 	std::string square_string = "";
 	square_string += numToChar(std::get<1>(square));
 	square_string += std::to_string(8 - std::get<0>(square));
 	return square_string;
+}
+
+tsquare Board::getSquareOfName(std::string name) {
+	int j = name[0] - 'a';
+	int i = name[1] - '0';
+	return tsquare(i,j);
 }
 
 
@@ -266,7 +272,7 @@ std::vector<tmove> Board::getPawnMoves(tsquare square) {
 				blocker = 1;
 			}
 
-			std::string sq_name = getSquare(tsquare(i+iinc, j+jinc));
+			std::string sq_name = getNameOfSquare(tsquare(i+iinc, j+jinc));
 			// Take en_passent
 			// en_passent square is always empty
 			if (sq_name == en_passent) {
@@ -339,7 +345,49 @@ std::vector<tmove> Board::getKingMoves(tsquare square) {
 			}
 		}
 	}
-	return stripIllegal(moves);
+	moves = stripIllegal(moves);
+
+
+	// Castle rules
+	if (to_play == white) {
+		if (white_kingside) {
+			tpiece f1 = board[7][5];
+			tpiece g1 = board[7][6];
+			if (f1 == 0 and g1 == 0) {
+				// kingside castle
+				moves.push_back(tmove(square, tsquare(i, j+2), 0));
+			}
+		}
+		if (white_queenside) {
+			tpiece b1 = board[7][1];
+			tpiece c1 = board[7][2];
+			tpiece d1 = board[7][3];
+			if (b1 == 0 and c1 == 0 and d1 == 0) {
+				// queenside castle
+				moves.push_back(tmove(square, tsquare(i, j-2), 0));
+			}
+		}
+	} else {
+		if (black_kingside) {
+			tpiece f8 = board[0][5];
+			tpiece g8 = board[0][6];
+			if (f8 == 0 and g8 == 0) {
+				// kingside castle
+				moves.push_back(tmove(square, tsquare(i, j+2), 0));
+			}
+		}
+		if (black_queenside) {
+			tpiece b8 = board[0][1];
+			tpiece c8 = board[0][2];
+			tpiece d8 = board[0][3];
+			if (b8 == 0 and c8 == 0 and d8 == 0) {
+				// queenside castle
+				moves.push_back(tmove(square, tsquare(i, j-2), 0));
+			}
+		}
+	}
+
+	return moves;
 }
 
 std::vector<tmove> Board::getMoves() {

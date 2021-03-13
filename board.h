@@ -46,7 +46,8 @@ class Board
 		tsquare findKing();
 
 		std::string numToChar(int j);
-		std::string getSquare(tsquare square);
+		std::string getNameOfSquare(tsquare square);
+		tsquare getSquareOfName(std::string name);
 
 		std::vector<tmove> stripIllegal(std::vector<tmove> moves);
 		std::vector<tmove> getKnightMoves(tsquare square);
