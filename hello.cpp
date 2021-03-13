@@ -212,6 +212,51 @@ bool test_king_pos(){
 	}
 }
 
+bool test_name_get(){
+	Board board;
+	tsquare square = board.getSquareOfName("b2");
+	std::string name = board.getNameOfSquare(square);
+	if (name != "b2") {
+		std::cout << "Name conversion failure\n";
+		return false;
+	} else {
+		return true;
+	}
+}
+
+
+bool test_check(){
+	bool pass = true;
+	Board board;
+	std::string fen_checks = "8/r5K1/3p4/2K5/4K3/2k1K1b1/1K4n1/4K3 w - - 0 1";
+	board.fromFen(fen_checks);
+
+	int checks;
+	checks = board.inCheck(board.getSquareOfName("b2"));
+	pass = pass and (checks == 1);
+
+	checks = board.inCheck(board.getSquareOfName("c5"));
+	pass = pass and (checks == 1);
+
+	checks = board.inCheck(board.getSquareOfName("e4"));
+	pass = pass and (checks == 0);
+
+	checks = board.inCheck(board.getSquareOfName("e3"));
+	pass = pass and (checks == 1);
+
+	checks = board.inCheck(board.getSquareOfName("e1"));
+	pass = pass and (checks == 2);
+		
+	checks = board.inCheck(board.getSquareOfName("g7"));
+	pass = pass and (checks == 1);
+
+	if (!pass) {
+		std::cout << "Check fail!\n";
+	}
+
+	return pass;
+}
+
 bool test_king_moves(){
 	bool pass = true;
 	Board board;
@@ -220,9 +265,7 @@ bool test_king_moves(){
 	std::vector<tmove> moves = board.getMoves();
 
 	std::set<std::string> s1;
-	s1 = {"c3", "d3", "d1", "e2", 
-		"c1", "e3", "e1"
-	};
+	s1 = {"c3", "d3", "d1", "e2"};
 
 	pass = pass and piece_moves_in_squares(
 		moves,
@@ -283,6 +326,73 @@ bool test_castle_moves(){
 		board
 	);
 
+	// 3
+
+	board.fromFen(fen_c3);
+	moves = board.getMoves();
+
+	std::set<std::string> s3 = {
+		"d2", "d1", "e2", "f2", "f1"
+	};
+
+	pass = pass and piece_moves_in_squares(
+		moves,
+		Board::white | Board::king,
+		board,
+		s3
+	);
+
+	pass = pass and squares_in_moves(
+		s3,
+		moves,
+		board
+	);
+
+	// 4
+	// Check blocks kingside, b1 in check (allowed) queenside
+	std::string fen_c4 = "8/8/1b6/8/4b3/8/8/R3K2R w KQ - 0 1";
+	board.fromFen(fen_c4);
+	moves = board.getMoves();
+
+	std::set<std::string> s4 = {
+		"c1", "d2", "d1", "e2", "f1"
+	};
+
+	pass = pass and piece_moves_in_squares(
+		moves,
+		Board::white | Board::king,
+		board,
+		s4
+	);
+
+	pass = pass and squares_in_moves(
+		s4,
+		moves,
+		board
+	);
+
+	// 5
+	// King is in check
+	std::string fen_c5 = "8/8/8/8/8/4r3/8/R3K2R w KQ - 0 1";
+	board.fromFen(fen_c5);
+	moves = board.getMoves();
+
+	std::set<std::string> s5 = {
+		"d2", "d1", "f2", "f1"
+	};
+
+	pass = pass and piece_moves_in_squares(
+		moves,
+		Board::white | Board::king,
+		board,
+		s5
+	);
+
+	pass = pass and squares_in_moves(
+		s5,
+		moves,
+		board
+	);
 	return pass;
 }
 
@@ -302,5 +412,7 @@ int main() {
 	pass += test_pawn_moves();
 	pass += test_king_moves();
 	pass += test_castle_moves();
+	pass += test_check();
+	pass += test_name_get();
 	return pass;
 }

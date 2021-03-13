@@ -57,6 +57,8 @@ class Board
 		std::vector<tmove> getPawnMoves(tsquare square);
 		std::vector<tmove> getKingMoves(tsquare square);
 
+		int inCheck(tsquare square);
+
 		enum Pieces
 		{
 			pawn = 0b001,
