@@ -66,6 +66,29 @@ bool squares_in_moves(
 	return true;
 }
 
+bool moves_in_squares(
+	std::vector<tmove> moves,
+	Board board,
+	std::set<std::string> s1
+) {
+	for (tmove move : moves) {
+		tsquare source = std::get<0>(move);
+		tsquare dest = std::get<1>(move);
+		tpiece mpiece = board.board[std::get<0>(source)][std::get<1>(source)];
+
+		if (s1.count(board.getNameOfSquare(dest))) {
+			continue;
+		} else {
+			// bad square
+			std::cout << board.getPiece(mpiece) << " trying ";
+			std::cout << board.getNameOfSquare(source) << "->";
+			std::cout << board.getNameOfSquare(dest) << " is wrong!\n";
+			return false;
+		}
+	}
+	return true;
+}
+
 bool piece_moves_in_squares(
 	std::vector<tmove> moves, tpiece piece, Board board, std::set<std::string> s1
 ) {
@@ -232,23 +255,31 @@ bool test_check(){
 	board.fromFen(fen_checks);
 
 	int checks;
-	checks = board.inCheck(board.getSquareOfName("b2"));
+	checks = board.inCheck(board.getSquareOfName("b2")).n;
 	pass = pass and (checks == 1);
 
-	checks = board.inCheck(board.getSquareOfName("c5"));
+	checks = board.inCheck(board.getSquareOfName("c5")).n;
 	pass = pass and (checks == 1);
 
-	checks = board.inCheck(board.getSquareOfName("e4"));
+	checks = board.inCheck(board.getSquareOfName("e4")).n;
 	pass = pass and (checks == 0);
 
-	checks = board.inCheck(board.getSquareOfName("e3"));
+	checks = board.inCheck(board.getSquareOfName("e3")).n;
 	pass = pass and (checks == 1);
 
-	checks = board.inCheck(board.getSquareOfName("e1"));
+	checks = board.inCheck(board.getSquareOfName("e1")).n;
 	pass = pass and (checks == 2);
 		
-	checks = board.inCheck(board.getSquareOfName("g7"));
+	checks = board.inCheck(board.getSquareOfName("g7")).n;
 	pass = pass and (checks == 1);
+
+	// Non king spot behavior
+	std::string fen_check_1 = "8/8/3p4/2pP4/3K4/8/8/8 w - c6 0 1";
+	board.fromFen(fen_check_1);
+
+	checks = board.inCheck(board.getSquareOfName("c5")).n;
+	pass = pass and (checks == 1);
+
 
 	if (!pass) {
 		std::cout << "Check fail!\n";
@@ -482,6 +513,79 @@ bool test_pin() {
 
 }
 
+bool test_move_counts() {
+	bool pass = true;
+
+	Board board;
+
+	board.fromFen(fen_in1);
+
+	std::vector<tmove> moves = board.getMoves();
+
+	pass = pass and (moves.size() == 20);
+	return pass;
+}
+
+bool test_check_blocking() {
+	bool pass = true;
+	Board board;
+
+	std::string fen_check_1 = "R3r3/8/8/3N4/8/8/r6B/4K3 w - - 0 1";
+	board.fromFen(fen_check_1);
+
+	std::vector<tmove> moves = board.getMoves();
+
+	std::set<std::string> s1;
+	s1 = {"d1", "f1",
+	       	"e8", "e7", "e5", "e3"
+	};
+
+	pass = pass and moves_in_squares(
+		moves,
+		board,
+		s1
+	);
+
+	pass = pass and squares_in_moves(
+		s1,
+		moves,
+		board
+	);
+
+	return pass;
+
+}
+
+bool test_en_passent_checking_pawn() {
+	bool pass = true;
+	Board board;
+
+	std::string fen_check_1 = "8/8/3p4/2pP4/3K4/8/8/8 w - c6 0 1";
+	board.fromFen(fen_check_1);
+
+	std::vector<tmove> moves = board.getMoves();
+
+	std::set<std::string> s1;
+	s1 = {"c4", "e4", "c3", "d3", "e3",
+	       	"c6"
+	};
+
+	pass = pass and moves_in_squares(
+		moves,
+		board,
+		s1
+	);
+
+	pass = pass and squares_in_moves(
+		s1,
+		moves,
+		board
+	);
+
+	return pass;
+
+}
+
 int main() {
 	int pass = 0;
 	std::cout << "Hello World\n";
@@ -490,6 +594,7 @@ int main() {
 	board.fromFen(fen_in1);
 	//std::vector<tmove> moves = board.getMoves();
 
+	/*
 	pass += test_fen();
 	pass += test_knight_moves();
 	pass += test_bishop_moves();
@@ -498,11 +603,18 @@ int main() {
 	pass += test_pawn_moves();
 	pass += test_king_moves();
 	pass += test_castle_moves();
+	*/
 	pass += test_check();
 
+	/*
 	pass += test_name_get();
 	pass += test_sameRow();
 	pass += test_sameDiagonal();
 	pass += test_pin();
+	pass += test_check_blocking();
+	pass += test_en_passent_checking_pawn();
+
+	pass += test_move_counts();
+	*/
 	return pass;
 }

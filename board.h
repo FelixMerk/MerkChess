@@ -4,11 +4,19 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <set>
 
 typedef std::tuple<int, int> tsquare;
 typedef unsigned char tpiece;
 // piece in move for promotions
 typedef std::tuple<tsquare, tsquare, tpiece> tmove;
+
+typedef struct check_info
+{
+	int n;
+	tsquare checker;
+} check_info;
+
 
 class Board
 {
@@ -58,12 +66,13 @@ class Board
 		std::vector<tmove> getPawnMoves(tsquare square);
 		std::vector<tmove> getKingMoves(tsquare square);
 
-		int inCheck(tsquare square);
+		check_info inCheck(tsquare square);
 
 		bool sameDiagonal(tsquare sq_a, tsquare sq_b);
 		bool sameRowOrColumn(tsquare sq_a, tsquare sq_b);
 		std::vector<tmove> stripByPin(tsquare square, std::vector<tmove> moves);
 		bool isAbsolutePinned(tsquare square);
+		std::set<tsquare> checkStops(tsquare k_pos, tsquare attacker);
 
 		enum Pieces
 		{

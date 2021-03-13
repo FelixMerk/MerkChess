@@ -233,6 +233,57 @@ bool Board::isAbsolutePinned(tsquare square){
 	return true;
 }
 
+
+std::set<tsquare> Board::checkStops(tsquare k_pos, tsquare attacker) {
+	std::set<tsquare> squares = {};
+	squares.insert(attacker);
+
+	int i = std::get<0>(attacker);
+	int j = std::get<1>(attacker);
+	tpiece piece = board[i][j];
+
+	int opponent;
+	if (to_play == white) {
+		opponent = black;
+	} else {
+		opponent = white;
+	}
+
+	if ((piece | opponent) == knight){
+		return squares;
+	}
+
+	if ((piece | opponent) == pawn){
+		// En passent could also be legal
+		return squares;
+	}
+
+	if ((piece | opponent) == king){
+		// This isn't really a real case
+		return squares;
+	}
+
+	// Left with Bishop, Rook, Queen
+	int ki = std::get<0>(k_pos);
+	int kj = std::get<1>(k_pos);
+
+	// Extract directional info
+	int rise = (0 < (i - ki)) - ((i - ki) < 0);
+	int run = (0 < (j - kj)) - ((j - kj) < 0);
+
+	// we got the same square twice as input!
+	if ((i == ki) and (j = kj)) {
+		throw 97;
+	}
+
+	while ((i != ki) or (j != kj)) {
+		squares.insert(tsquare(i,j));
+		i -= rise;
+		j -= run;
+	}
+	return squares;
+}
+
 tsquare Board::findKing() {
 	for (int i = 0; i < 8; i++){
 		for (int j = 0; j<8; j++){
@@ -392,15 +443,24 @@ std::vector<tmove> Board::getQueenMoves(tsquare square) {
 	return moves;
 }
 
-int Board::inCheck(tsquare square) {
+check_info Board::inCheck(tsquare square) {
 	// Returns number of checks (to account for double check)
 	int check_count = 0;
+	tsquare checker;
 	int opponent;
 	if (to_play == white) {
 		opponent = black;
 	} else {
 		opponent = white;
 	}
+
+
+	// Pieces can't take their friends, so we stick a temp king in square
+	int i2 = std::get<0>(square);
+	int j2 = std::get<1>(square);
+	tpiece checkee = board[i2][j2];
+	board[i2][j2] = king | to_play;
+	
 	// Is this square under attack?
 	
 	// NOTE: We need to ignore pins for this
@@ -412,6 +472,7 @@ int Board::inCheck(tsquare square) {
 		int i = std::get<0>(possible_knight);
 		int j = std::get<1>(possible_knight);
 		if ((knight | opponent) == board[i][j]) {
+			checker = possible_knight;
 			check_count++;
 		}
 	}
@@ -424,13 +485,14 @@ int Board::inCheck(tsquare square) {
 		int i = std::get<0>(possible_piece);
 		int j = std::get<1>(possible_piece);
 		if ((bishop | opponent) == board[i][j]) {
+			checker = possible_piece;
 			check_count++;
 		} else if ((queen | opponent) == board[i][j]) {
+			checker = possible_piece;
 			check_count++;
 		} else if ((king | opponent) == board[i][j]) {
-			int i2 = std::get<0>(square);
-			int j2 = std::get<1>(square);
 			if (std::abs(i-i2) < 2 and std::abs(j-j2) < 2) {
+				checker = possible_piece;
 				check_count++;
 			}
 		} else if ((pawn | opponent) == board[i][j]) {
@@ -442,6 +504,7 @@ int Board::inCheck(tsquare square) {
 			for (tmove pawn_move : pawn_moves) {
 				tsquare pawn_dest = std::get<1>(pawn_move);
 				if (pawn_dest == square) {
+					checker = possible_piece;
 					check_count++;
 				}
 			}
@@ -456,20 +519,23 @@ int Board::inCheck(tsquare square) {
 		int i = std::get<0>(possible_piece);
 		int j = std::get<1>(possible_piece);
 		if ((rook | opponent) == board[i][j]) {
+			checker = possible_piece;
 			check_count++;
 		} else if ((queen | opponent) == board[i][j]) {
+			checker = possible_piece;
 			check_count++;
 		} else if ((king | opponent) == board[i][j]) {
-			int i2 = std::get<0>(square);
-			int j2 = std::get<1>(square);
 			if (std::abs(i-i2) < 2 and std::abs(j-j2) < 2) {
+				checker = possible_piece;
 				check_count++;
 			}
 		}
 
 	}
 
-	return check_count;
+	check_info c = {check_count, checker};
+	board[i2][j2] = checkee;
+	return c;
 }
 
 std::vector<tmove> Board::getPawnMoves(tsquare square) {
@@ -560,7 +626,7 @@ std::vector<tmove> Board::getKingMoves(tsquare square) {
 	for (int a : hop) {
 		for (int b : hop) {
 			if (a != 0 or b != 0) {
-				if (inCheck(tsquare(i+a,j+b)) == 0) {
+				if (inCheck(tsquare(i+a,j+b)).n == 0) {
 					moves.push_back(tmove(
 						square, 
 						tsquare(i+a, j+b), 
@@ -579,9 +645,9 @@ std::vector<tmove> Board::getKingMoves(tsquare square) {
 			tpiece f1 = board[7][5];
 			tpiece g1 = board[7][6];
 			int checks = 
-				inCheck(tsquare(7,5)) + 
-				inCheck(tsquare(7,6)) + 
-				inCheck(square);
+				inCheck(tsquare(7,5)).n + 
+				inCheck(tsquare(7,6)).n + 
+				inCheck(square).n;
 			if (f1 == 0 and g1 == 0 and checks == 0) {
 				// kingside castle
 				moves.push_back(tmove(square, tsquare(i, j+2), 0));
@@ -592,9 +658,9 @@ std::vector<tmove> Board::getKingMoves(tsquare square) {
 			tpiece c1 = board[7][2];
 			tpiece d1 = board[7][3];
 			int checks = 
-				inCheck(tsquare(7,2)) + 
-				inCheck(tsquare(7,3)) + 
-				inCheck(square);
+				inCheck(tsquare(7,2)).n + 
+				inCheck(tsquare(7,3)).n + 
+				inCheck(square).n;
 			if (b1 == 0 and c1 == 0 and d1 == 0 and checks == 0) {
 				// queenside castle
 				moves.push_back(tmove(square, tsquare(i, j-2), 0));
@@ -605,9 +671,9 @@ std::vector<tmove> Board::getKingMoves(tsquare square) {
 			tpiece f8 = board[0][5];
 			tpiece g8 = board[0][6];
 			int checks = 
-				inCheck(tsquare(0,5)) + 
-				inCheck(tsquare(0,6)) + 
-				inCheck(square);
+				inCheck(tsquare(0,5)).n + 
+				inCheck(tsquare(0,6)).n + 
+				inCheck(square).n;
 			if (f8 == 0 and g8 == 0 and checks == 0) {
 				// kingside castle
 				moves.push_back(tmove(square, tsquare(i, j+2), 0));
@@ -618,9 +684,9 @@ std::vector<tmove> Board::getKingMoves(tsquare square) {
 			tpiece c8 = board[0][2];
 			tpiece d8 = board[0][3];
 			int checks = 
-				inCheck(tsquare(0,2)) + 
-				inCheck(tsquare(0,3)) + 
-				inCheck(square);
+				inCheck(tsquare(0,2)).n + 
+				inCheck(tsquare(0,3)).n + 
+				inCheck(square).n;
 			if (b8 == 0 and c8 == 0 and d8 == 0 and checks == 0) {
 				// queenside castle
 				moves.push_back(tmove(square, tsquare(i, j-2), 0));
@@ -634,6 +700,24 @@ std::vector<tmove> Board::getKingMoves(tsquare square) {
 std::vector<tmove> Board::getMoves() {
 	std::vector<tmove> moves = {};
 	std::vector<tsquare> locations = getPieces();
+
+	int opponent;
+	if (to_play == white) {
+		opponent = black;
+	} else {
+		opponent = white;
+	}
+
+	check_info c = inCheck(king_pos);
+	int check_count = c.n;
+	std::set<tsquare> check_stops = {};
+	if (check_count > 1) {
+		// Double check.
+		moves = getKingMoves(king_pos);
+		return moves;
+	} else if (check_count == 1) {
+		check_stops = checkStops(king_pos, c.checker);
+	}
 
 	for (tsquare square : locations) {
 		std::vector<tmove> new_moves;
@@ -661,8 +745,36 @@ std::vector<tmove> Board::getMoves() {
 				break;
 			default: break;
 		}
-		// Handle Absolute Pins
-		if (((piece ^ to_play) != king) and  isAbsolutePinned(square)) {
+		if (((piece ^ to_play) != king) and  check_count) {
+			// Handle checks
+			std::vector<tmove> check_stopping_moves;
+			tsquare en_passent_option = tsquare(-1, -1);
+
+			if ((en_passent != "") and ((piece ^ to_play) == pawn)){
+				// if en_passent and checker = pawn
+				// Then we know that the pawn gave check
+				// Since there aren't discovered pawn checks
+				int ci = std::get<0>(c.checker);
+				int cj = std::get<1>(c.checker);
+				tpiece c_piece = board[ci][cj];
+				if (c_piece == (pawn | opponent)) {
+					en_passent_option =  getSquareOfName(en_passent);
+				}
+			}
+
+			for (tmove move : new_moves) {
+				tsquare dest = std::get<1>(move);
+				if (
+					check_stops.count(dest) or 
+					(dest == en_passent_option)
+				) {
+					check_stopping_moves.push_back(move);
+				}
+			}
+
+			new_moves = check_stopping_moves;
+		} else if (((piece ^ to_play) != king) and  isAbsolutePinned(square)) {
+			// Handle Absolute Pins
 			new_moves = stripByPin(square, new_moves);
 		}
 		moves.insert(moves.end(), new_moves.begin(), new_moves.end());
