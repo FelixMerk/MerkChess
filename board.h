@@ -21,6 +21,7 @@ class Board
 		int halfmove;
 		int fullmove;
 		std::string en_passent;
+		tsquare king_pos;
 		/*
 		unsigned char pawn;
 		unsigned char bishop;
@@ -58,6 +59,11 @@ class Board
 		std::vector<tmove> getKingMoves(tsquare square);
 
 		int inCheck(tsquare square);
+
+		bool sameDiagonal(tsquare sq_a, tsquare sq_b);
+		bool sameRowOrColumn(tsquare sq_a, tsquare sq_b);
+		std::vector<tmove> stripByPin(tsquare square, std::vector<tmove> moves);
+		bool isAbsolutePinned(tsquare square);
 
 		enum Pieces
 		{

@@ -98,6 +98,141 @@ tsquare Board::getSquareOfName(std::string name) {
 }
 
 
+bool Board::sameDiagonal(tsquare sq_a, tsquare sq_b) {
+	int ai = std::get<0>(sq_a);
+	int aj = std::get<1>(sq_a);
+
+	int bi = std::get<0>(sq_b);
+	int bj = std::get<1>(sq_b);
+
+	if (ai - bi == aj - bj) {
+		return true;
+	} else if (ai - bi == - (aj - bj)) {
+		return true;
+	}
+	return false;
+}
+
+bool Board::sameRowOrColumn(tsquare sq_a, tsquare sq_b) {
+	int ai = std::get<0>(sq_a);
+	int aj = std::get<1>(sq_a);
+
+	int bi = std::get<0>(sq_b);
+	int bj = std::get<1>(sq_b);
+
+	if ((ai == bi) or (aj == bj)) {
+		return true;
+	}
+	return false;
+}
+
+
+std::vector<tmove> Board::stripByPin(tsquare square, std::vector<tmove> moves) {
+	// Use king_pos and otherwise legal moves to strip 
+	// pinned moves
+	// Moves within the pin are legal
+	std::vector<tmove> new_moves = {};
+
+	bool diag = sameDiagonal(square, king_pos);
+	bool row = sameRowOrColumn(square, king_pos);
+
+	for (tmove move : moves) {
+		tsquare dest = std::get<1>(move);
+		if (diag) {
+			if (sameDiagonal(dest, king_pos)) {
+				new_moves.push_back(move);
+			}
+		} else if (row) {
+			if (sameRowOrColumn(dest, king_pos)) {
+				new_moves.push_back(move);
+			}
+		}
+	}
+	return new_moves;
+}
+
+
+bool Board::isAbsolutePinned(tsquare square){
+	// Is square pinned to king_pos?
+	//
+	//
+	bool diag = sameDiagonal(square, king_pos);
+	bool row = sameRowOrColumn(square, king_pos);
+	
+	if (!diag and !row) {
+		return false;
+	}
+
+	int ai = std::get<0>(square);
+	int aj = std::get<1>(square);
+
+	int ki = std::get<0>(king_pos);
+	int kj = std::get<1>(king_pos);
+
+	// Extract directional info
+	int rise = (0 < (ai - ki)) - ((ai - ki) < 0);
+	int run = (0 < (aj - kj)) - ((aj - kj) < 0);
+
+	// 1. Check for attackers on the far side
+	int i = ai;
+	int j = aj;
+	bool possible_pin = false;
+	// On diagonals both will hit the side at once
+	// For rows we can follow a side of the board
+	while ((i != 0 and i != 7) or (j != 0 and j != 7)) {
+		i += rise;
+		j += run;
+		tpiece piece = board[i][j];
+		if (piece) {
+			if (to_play == (to_play & piece)){
+				// our piece
+				return false;
+			} else {
+				// enemy piece
+				if (row) {
+					if (rook == (piece & rook)) {
+						possible_pin = true;
+						break;
+					} else if (queen == (piece & queen)) {
+						possible_pin = true;
+						break;
+					}
+				} else if (diag) {
+					if (bishop == (piece & bishop)) {
+						possible_pin = true;
+						break;
+					} else if (queen == (piece & queen)) {
+						possible_pin = true;
+						break;
+					}
+				}
+				// Otherwise we have a piece that can't pin
+				return false;
+			}
+		}
+	}
+	if (!possible_pin) {
+		// We reached the edge witout seeing any new pieces
+		return false;
+	}
+
+	// 2. Check for pieces on the close side
+	while ((ai != ki) or (aj != kj)) {
+		ai -= rise;
+		aj -= run;
+
+		tpiece piece = board[i][j];
+		if (piece) {
+			if (piece != (king | to_play)) {
+				return false;
+			}
+		}
+	}
+
+	// We reached the king and are pinned
+	return true;
+}
+
 tsquare Board::findKing() {
 	for (int i = 0; i < 8; i++){
 		for (int j = 0; j<8; j++){
@@ -107,7 +242,8 @@ tsquare Board::findKing() {
 				pass = (piece == (king | to_play));
 
 				if (pass) {
-					return std::tuple<int, int>(i,j);
+					king_pos = tsquare(i,j);
+					return king_pos;
 				}
 
 				// We have a piece.  It may be able to move.
@@ -127,6 +263,9 @@ std::vector<tsquare> Board::getPieces() {
 			unsigned char piece = board[i][j];
 			if (piece){
 				if (to_play == (piece & to_play)) {
+					if (piece == (king | to_play)) {
+						king_pos = tsquare(i,j);
+					}
 					// We have a piece of the right color
 					locations.push_back(tsquare(i,j));
 				}
@@ -495,6 +634,7 @@ std::vector<tmove> Board::getKingMoves(tsquare square) {
 std::vector<tmove> Board::getMoves() {
 	std::vector<tmove> moves = {};
 	std::vector<tsquare> locations = getPieces();
+
 	for (tsquare square : locations) {
 		std::vector<tmove> new_moves;
 		int i = std::get<0>(square);
@@ -520,6 +660,10 @@ std::vector<tmove> Board::getMoves() {
 				new_moves = getKingMoves(square);
 				break;
 			default: break;
+		}
+		// Handle Absolute Pins
+		if (((piece ^ to_play) != king) and  isAbsolutePinned(square)) {
+			new_moves = stripByPin(square, new_moves);
 		}
 		moves.insert(moves.end(), new_moves.begin(), new_moves.end());
 	}

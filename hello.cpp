@@ -396,6 +396,92 @@ bool test_castle_moves(){
 	return pass;
 }
 
+bool test_sameDiagonal() {
+	bool pass = true;
+
+	Board board;
+
+	tsquare sq_a = board.getSquareOfName("b1");
+	tsquare sq_b = board.getSquareOfName("f5");
+	pass = pass and (board.sameDiagonal(sq_a, sq_b) == true);
+
+	sq_a = board.getSquareOfName("c8");
+	sq_b = board.getSquareOfName("g4");
+	pass = pass and (board.sameDiagonal(sq_a, sq_b) == true);
+
+	sq_a = board.getSquareOfName("g2");
+	sq_b = board.getSquareOfName("e4");
+	pass = pass and (board.sameDiagonal(sq_a, sq_b) == true);
+
+	sq_a = board.getSquareOfName("h8");
+	sq_b = board.getSquareOfName("d1");
+	pass = pass and (board.sameDiagonal(sq_a, sq_b) == false);
+
+	sq_a = board.getSquareOfName("a7");
+	sq_b = board.getSquareOfName("h7");
+	pass = pass and (board.sameDiagonal(sq_a, sq_b) == false);
+
+	if (!pass) {
+		std::cout << "sameDiagonal broken\n";
+	}
+	return pass;
+}
+
+bool test_sameRow() {
+	bool pass = true;
+
+	Board board;
+
+	tsquare sq_a = board.getSquareOfName("a7");
+	tsquare sq_b = board.getSquareOfName("h7");
+	pass = pass and (board.sameRowOrColumn(sq_a, sq_b) == true);
+
+	sq_a = board.getSquareOfName("e3");
+	sq_b = board.getSquareOfName("e2");
+	pass = pass and (board.sameRowOrColumn(sq_a, sq_b) == true);
+
+	sq_a = board.getSquareOfName("c8");
+	sq_b = board.getSquareOfName("g4");
+	pass = pass and (board.sameRowOrColumn(sq_a, sq_b) == false);
+	
+	if (!pass) {
+		std::cout << "sameRow broken\n";
+	}
+	return pass;
+}
+
+bool test_pin() {
+	bool pass = true;
+	Board board;
+
+	std::string fen_pins = "8/8/3r4/7b/q2R4/1P3N2/2B5/3KN1Nr w - - 0 1";
+	board.fromFen(fen_pins);
+
+	std::vector<tmove> moves = board.getMoves();
+
+	std::set<std::string> s1;
+	s1 = {"b4", "b1",
+	       	"d6", "d5", "d3", "d2", 
+		"e2", "g2", "h3",
+		"c1", "e2"};
+
+	pass = pass and piece_moves_in_squares(
+		moves,
+		Board::white | Board::king,
+		board,
+		s1
+	);
+
+	pass = pass and squares_in_moves(
+		s1,
+		moves,
+		board
+	);
+
+	return pass;
+
+}
+
 int main() {
 	int pass = 0;
 	std::cout << "Hello World\n";
@@ -413,6 +499,10 @@ int main() {
 	pass += test_king_moves();
 	pass += test_castle_moves();
 	pass += test_check();
+
 	pass += test_name_get();
+	pass += test_sameRow();
+	pass += test_sameDiagonal();
+	pass += test_pin();
 	return pass;
 }
