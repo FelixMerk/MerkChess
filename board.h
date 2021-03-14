@@ -17,6 +17,17 @@ typedef struct check_info
 	tsquare checker;
 } check_info;
 
+typedef struct complete_move_info
+{
+	tmove move;
+	tpiece piece;
+	std::string ep;
+	int K;
+	int Q;
+	int k;
+	int q;
+} complete_move_info;
+
 
 class Board
 {
@@ -74,7 +85,8 @@ class Board
 		bool isAbsolutePinned(tsquare square);
 		std::set<tsquare> checkStops(tsquare k_pos, tsquare attacker);
 
-		void makeMove(tmove move);
+		complete_move_info makeMove(tmove move);
+		void undoMove(complete_move_info info);
 
 		enum Pieces
 		{

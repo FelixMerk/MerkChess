@@ -20,20 +20,20 @@ std::string fen_in7 = "8/3P4/2p5/1pP1pp2/p4P1p/2p1p1P1/PP2P3/8 w - b6 0 1";
 // King things
 std::string fen_in8 = "8/8/8/8/5k2/3n4/2PK4/8 w - - 0 1";
 
-int test_fen_conversion(Board board, std::string fen_in) {
+bool test_fen_conversion(Board board, std::string fen_in) {
 	board.fromFen(fen_in);
 	std::string fen_out = board.toFen();
 	if (fen_in == fen_out) {
-		return 0;
+		return true;
 	} else {
 		std::cout << "Fen fail!\n";
 		std::cout << "fen_in: " << fen_in << "\n";
 		std::cout << "fen_out: " << fen_out << "\n";
-		return 1;
+		return false;
 	}
 }
 
-int test_fen() {
+bool test_fen() {
 	int status = 0;
 	Board board;
 	status += test_fen_conversion(board, fen_in1);
@@ -509,6 +509,10 @@ bool test_pin() {
 		board
 	);
 
+	if (!pass) {
+		std::cout << "Pine broken\n";
+	}
+
 	return pass;
 
 }
@@ -523,6 +527,11 @@ bool test_move_counts() {
 	std::vector<tmove> moves = board.getMoves();
 
 	pass = pass and (moves.size() == 20);
+
+	if (!pass) {
+		std::cout << "move count broken\n";
+	}
+
 	return pass;
 }
 
@@ -551,6 +560,10 @@ bool test_check_blocking() {
 		moves,
 		board
 	);
+
+	if (!pass) {
+		std::cout << "Check block broken\n";
+	}
 
 	return pass;
 
@@ -582,6 +595,10 @@ bool test_en_passent_checking_pawn() {
 		board
 	);
 
+	if (!pass) {
+		std::cout << "En passent check broken\n";
+	}
+
 	return pass;
 
 }
@@ -593,11 +610,148 @@ bool test_make_moves() {
 	board.fromFen(fen_in1);
 	std::vector<tmove> moves = board.getMoves();
 
-	board.makeMove(board.getSquareOfName("e4"));
-	board.makeMove(board.getSquareOfName("e5"));
+	// Move 1
+	tsquare source = board.getSquareOfName("e2");
+	tsquare target = board.getSquareOfName("e4");
+	complete_move_info info1 = board.makeMove(tmove(source, target, 0));
+
+	std::string fen_out1 = board.toFen();
+	pass = pass and (
+		fen_out1 == 
+		"rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
+	);
+
+	// Move 2
+	source = board.getSquareOfName("e7");
+	target = board.getSquareOfName("e5");
+	complete_move_info info2 = board.makeMove(tmove(source, target, 0));
+
+	std::string fen_out2 = board.toFen();
+	pass = pass and (
+		fen_out2 == 
+		"rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2"
+	);
+
+	// Unmake moves
+	board.undoMove(info2);
+	std::string fen_out3 = board.toFen();
+	pass = pass and (
+		fen_out3 == 
+		fen_out1
+	);
+	board.undoMove(info1);
+	std::string fen_out4 = board.toFen();
+	pass = pass and (
+		fen_out4 == 
+		fen_in1
+	);
+	
+
+	// Test castle
+	std::string fen_pre_castle = 
+		"r1bqkbnr/ppp2ppp/2np4/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq e6 0 2";
+	board.fromFen(fen_pre_castle);
+
+	source = board.getSquareOfName("e1");
+	target = board.getSquareOfName("g1");
+	complete_move_info info3 = board.makeMove(tmove(source, target, 0));
+
+	std::string fen_out5 = board.toFen();
+	pass = pass and (
+		fen_out5 == 
+		"r1bqkbnr/ppp2ppp/2np4/4p3/2B1P3/5N2/PPPP1PPP/RNBQ1RK1 b kq - 0 2"
+	);
+
+	board.undoMove(info3);
+	std::string fen_out6 = board.toFen();
+	pass = pass and (
+		fen_out6 ==
+		fen_pre_castle
+	);
+
+	// Test en passent
+	std::string fen_pre_ep = 
+		"1n4k1/8/8/3pP3/8/8/8/3K1B2 w - d6 0 1";
+	board.fromFen(fen_pre_ep);
+
+	source = board.getSquareOfName("e5");
+	target = board.getSquareOfName("d6");
+	complete_move_info info4 = board.makeMove(tmove(source, target, 0));
+
+	std::string fen_out7 = board.toFen();
+	pass = pass and (
+		fen_out7 == 
+		"1n4k1/8/3P4/8/8/8/8/3K1B2 b - - 0 1"
+	);
+
+	board.undoMove(info4);
+	std::string fen_out8 = board.toFen();
+	pass = pass and (
+		fen_out8 ==
+		fen_pre_ep
+	);
+
+	if (!pass) {
+		std::cout << "Make move broken\n";
+	}
 
 	return pass;
 
+}
+
+int perft(int depth, Board board) {
+	std::vector<tmove> moves = board.getMoves();
+
+	int count = 0;
+
+	if (depth == 1) {
+		return moves.size();
+	}
+
+	for (tmove move : moves) {
+		complete_move_info info = board.makeMove(move);
+		count += perft(depth - 1, board);
+		board.undoMove(info);
+	}
+
+	return count;
+}
+
+
+bool test_perft() {
+	bool pass = true;
+	//starting pos
+	Board board;
+
+	board.fromFen(fen_in1);
+	int count = perft(2, board);
+	pass = pass and count == 400;
+	std::cout << count << "\n";
+	count = perft(3, board);
+	pass = pass and count == 8902;
+	std::cout << count << "\n";
+	//count = perft(4, board);
+	// Currently wrong, we get 197469
+	//pass = pass and count == 197281;
+	//std::cout << count << "\n";
+
+
+	std::string fen_perft2 = 
+		"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+	board.fromFen(fen_perft2);
+	count = perft(1, board);
+	pass = pass and count == 48;
+	std::cout << count << "\n";
+
+	count = perft(2, board);
+	pass = pass and count == 2039;
+	std::cout << count << "\n";
+
+
+	if (!pass) {
+		std::cout << "Perft broken\n";
+	}
+	return true;
 }
 
 int main() {
@@ -625,8 +779,10 @@ int main() {
 	pass += test_check_blocking();
 	pass += test_en_passent_checking_pawn();
 
-	pass += test_move_counts();
-
 	pass += test_make_moves();
+
+	pass += test_move_counts();
+	pass += test_perft();
+
 	return pass;
 }

@@ -782,7 +782,7 @@ std::vector<tmove> Board::getMoves() {
 	return moves;
 }
 
-void Board::makeMove(tmove move) {
+complete_move_info Board::makeMove(tmove move) {
 
 	tsquare source = std::get<0>(move);
 	int si = std::get<0>(source);
@@ -801,6 +801,15 @@ void Board::makeMove(tmove move) {
 		opponent = white;
 	}
 
+	complete_move_info info = {
+		move,
+		dpiece,
+		en_passent,
+		white_kingside,
+		white_queenside,
+		black_kingside,
+		black_queenside
+	};
 
 	// Move piece
 	board[di][dj] = spiece;
@@ -896,6 +905,93 @@ void Board::makeMove(tmove move) {
 	// Switch colors
 	if (to_play == white) { to_play = black; }
 	else { to_play = white; fullmove++; }
+
+	return info;
+}
+
+void Board::undoMove(
+	complete_move_info info
+) {
+	tmove move = info.move;
+	tpiece piece = info.piece;
+	std::string ep = info.ep;
+	int K = info.K;
+	int Q = info.Q;
+	int k = info.k;
+	int q = info.q;
+
+	tsquare source = std::get<0>(move);
+	int si = std::get<0>(source);
+	int sj = std::get<1>(source);
+
+	tsquare dest = std::get<1>(move);
+	int di = std::get<0>(dest);
+	int dj = std::get<1>(dest);
+
+	tpiece dpiece = board[di][dj];
+
+	tpiece promotion = std::get<2>(move);
+
+	int opponent;
+	if (to_play == white) {
+		opponent = black;
+	} else {
+		opponent = white;
+	}
+
+
+	// Unmove piece
+	board[si][sj] = dpiece;
+	board[di][dj] = piece;
+
+
+	// Castling rights
+	white_kingside = K;
+	white_queenside = Q;
+	black_kingside = k;
+	black_queenside = q;
+
+
+	// Promotion
+	if (promotion != 0) {
+		board[si][sj] = pawn | opponent;
+	}
+
+
+	// (un) En Passent
+
+	if ((dpiece == (pawn | opponent)) and
+		(ep != "") and
+		(getSquareOfName(ep) == dest)
+	){
+		// Took en_passent
+		if (opponent == white) {
+			board[di+1][dj] = pawn | to_play;
+		}
+		if (opponent == black) {
+			board[di-1][dj] = pawn | to_play;
+		}
+	}
+	en_passent = ep;
+
+	// (un) Castles
+	
+	if (
+		dpiece == (king | opponent) and
+		std::abs(sj-dj) == 2
+	) {
+		int rj = 0;
+		if (sj < dj) {
+			rj = 7;
+		}
+
+		board[si][rj] = rook | opponent;
+		board[si][(sj+dj)/2] = 0b0;
+	}
+
+	// Switch colors
+	if (to_play == white) { to_play = black; fullmove--; }
+	else { to_play = white; }
 }
 		
 std::string Board::pieceToFen(char piece) {
