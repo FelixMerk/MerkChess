@@ -29,6 +29,13 @@ typedef struct complete_move_info
 	int q;
 } complete_move_info;
 
+typedef struct minimax_val
+{
+
+	tmove move;
+	int val;
+} minimax_val;
+
 
 class Board
 {
@@ -96,6 +103,7 @@ class Board
 		void undoMove(complete_move_info info);
 
 		int evaluate();
+		minimax_val minimax(int depth);
 
 		enum Pieces
 		{

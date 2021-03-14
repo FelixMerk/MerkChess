@@ -391,16 +391,16 @@ std::set<tsquare> Board::checkStops(tsquare k_pos, tsquare attacker) {
 		opponent = white;
 	}
 
-	if ((piece | opponent) == knight){
+	if ((knight | opponent) == piece){
 		return squares;
 	}
 
-	if ((piece | opponent) == pawn){
+	if ((pawn | opponent) == piece){
 		// En passent could also be legal
 		return squares;
 	}
 
-	if ((piece | opponent) == king){
+	if ((king | opponent) == piece){
 		// This isn't really a real case
 		return squares;
 	}
@@ -853,14 +853,13 @@ std::vector<tmove> Board::getMoves() {
 	std::vector<tmove> moves = {};
 	std::vector<tsquare> locations = getPieces();
 
-
 	int opponent;
 	if (to_play == white) {
 		opponent = black;
 	} else {
 		opponent = white;
 	}
-
+	
 	check_info c = inCheck(king_pos);
 	int check_count = c.n;
 	std::set<tsquare> check_stops = {};
@@ -1018,6 +1017,61 @@ int Board::evaluate() {
 	}
 
 	return (my_val - op_val);
+}
+
+minimax_val Board::minimax(int depth) {
+	int value = -900000;
+	tmove best_move;
+
+	if (depth == 0) {
+		// Should qiuescent search on checks ...
+		value = evaluate();
+	} else {
+		std::vector<tmove> moves = getMoves();
+
+		if (moves.size() == 0) {
+			// checkmate or stalemate
+			if (inCheck(king_pos).n > 0) {
+				//std::cout << "Checkmate found\n";
+				//std::cout << value << "\n";
+				return {best_move, value};
+			}
+			else {
+				std::cout << "Stalemate found\n";
+				return {best_move, 0};
+			}
+		}
+			
+		for (tmove move : moves) {
+			// Make
+			complete_move_info info = makeMove(move);
+
+			// Check eval
+			int branch_val = -1 * minimax(depth - 1).val;
+			if (branch_val > value) {
+				best_move = move;
+				value = branch_val;
+			}
+
+			// Unmake
+			undoMove(info);
+			if (depth == 4 and false) {
+				std::cout << value << " = val for:\n";
+				std::cout << branch_val << " = val for:\n";
+				tsquare source = std::get<0>(move);
+				int i = std::get<0>(source);
+				int j = std::get<1>(source);
+				tpiece piece = board[i][j];
+				tsquare dest = std::get<1>(move);
+		       		tpiece promo = std::get<2>(move);
+		       		std::cout << getPiece(piece) << " moves: ";
+				std::cout << getNameOfSquare (source) << "->";
+				std::cout << getNameOfSquare (dest) << "\n";
+			}
+		}
+	}
+
+	return {best_move, value};
 }
 
 complete_move_info Board::makeMove(tmove move) {

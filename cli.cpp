@@ -20,10 +20,18 @@ tmove getUsersMove(Board& board) {
 		board.getSquareOfName(umove.substr(2,2)),
 		0
 	);
+	std::vector<tmove> moves = board.getMoves();
+	if (std::find(moves.begin(), moves.end(), move) == moves.end()) {
+		// move not in moves
+		std::cout << "Computer thinks your move is not legal\n";
+		move = getUsersMove(board);
+	}
+
+
 	return move;
 }
 
-void move(Board& board){
+void moveFirst(Board& board){
 	std::vector<tmove> moves = board.getMoves();
 	if (moves.size() > 0) {
 		tmove move = moves.front();
@@ -42,6 +50,22 @@ void move(Board& board){
 
 }
 
+void moveMinimax(Board& board){
+	tmove move = board.minimax(3).move;
+
+	tsquare source = std::get<0>(move);
+	tsquare dest = std::get<1>(move);
+	tpiece promo = std::get<2>(move);
+
+	std::cout << board.getNameOfSquare(source) << " -> ";
+	std::cout << board.getNameOfSquare(dest) << " \n";
+	if (promo != 0) {
+		std::cout << board.getPiece(promo) << " \n";
+	}
+
+	board.makeMove(move);
+}
+
 int main() {
 	int pass = 0;
 	std::cout << "Hello Player\n";
@@ -50,8 +74,9 @@ int main() {
 	board.fromFen(fen_in1);
 
 	int i = 0;
-	while (i < 20){
-		move(board);
+	while (i < 10){
+		//moveFirst(board);
+		moveMinimax(board);
 
 		tmove user_move = getUsersMove(board);
 		board.makeMove(user_move);
