@@ -782,6 +782,121 @@ std::vector<tmove> Board::getMoves() {
 	return moves;
 }
 
+void Board::makeMove(tmove move) {
+
+	tsquare source = std::get<0>(move);
+	int si = std::get<0>(source);
+	int sj = std::get<1>(source);
+	tpiece spiece = board[si][sj]
+	tsquare dest = std::get<1>(move);
+	int di = std::get<0>(dest);
+	int dj = std::get<1>(dest);
+	tpiece dpiece = board[di][dj]
+	tpiece promotion = std::get<2>(move);
+
+	int opponent;
+	if (to_play == white) {
+		opponent = black;
+	} else {
+		opponent = white;
+	}
+
+
+	// Move piece
+	board[di][dj] = spiece;
+
+	// Promotion
+	if (promotion != 0) {
+		board[di][dj] = promotion;
+	}
+	board[si][sj] = 0b0;
+
+
+	// En Passent
+
+	if ((spiece == (pawn | to_play)) and
+		(en_passent != "") and
+		(getSquareOfName(en_passent) == dest)
+	){
+		// Took en_passent
+		if (to_play == white) {
+			board[di+1][dj] = 0b0;
+		}
+		if (to_play == black) {
+			board[di-1][dj] = 0b0;
+		}
+	}
+	en_passent = "";
+	if ((spiece == (pawn | to_play)) and
+		(std::abs(si-di) == 2)
+	) {
+		en_passent = getNameOfSquare(tsquare((si+di)/2,sj));
+	}
+
+	// Castles
+	
+	if (
+		spiece == (king | to_play) and
+		std::abs(sj-dj) == 2
+	) {
+		int rj = 0
+		if (sj < dj) {
+			rj = 7;
+		}
+
+		board[si][rj] = 0b0;
+		board[si][(sj+dj)/2] = rook | to_play;
+	}
+
+	// King moves
+	if (spiece == (king | to_play)) {
+		if (to_play == white){
+			white_kingside = 0;
+			white_queenside = 0;
+		} else if (to_play == black) {
+			black_kingside = 0;
+			black_queenside = 0;
+		}
+	}
+
+	// Rook moves
+	if (spiece == (rook | to_play)) {
+		if (to_play == white){
+			if (sj == 0) {
+				white_queenside = 0;
+			} else if (sj == 7) {
+				white_kingside = 0;
+			}
+		} else if (to_play == black) {
+			if (sj == 0) {
+				black_queenside = 0;
+			} else if (sj == 7) {
+				black_kingside = 0;
+			}
+		}
+	}
+
+	// We capture a rook
+	if (dpiece == (rook | opponent)) {
+		if (opponent == white){
+			if (dj == 0) {
+				white_queenside = 0;
+			} else if (dj == 7) {
+				white_kingside = 0;
+			}
+		} else if (opponent == black) {
+			if (dj == 0) {
+				black_queenside = 0;
+			} else if (dj == 7) {
+				black_kingside = 0;
+			}
+		}
+	}
+
+	// Switch colors
+	if (to_play == white) { to_play = black}
+	else { to_play = white; fullmove++ }
+}
 		
 std::string Board::pieceToFen(char piece) {
 	switch(piece) {

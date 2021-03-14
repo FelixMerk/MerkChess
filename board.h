@@ -74,6 +74,8 @@ class Board
 		bool isAbsolutePinned(tsquare square);
 		std::set<tsquare> checkStops(tsquare k_pos, tsquare attacker);
 
+		void makeMove(tmove move);
+
 		enum Pieces
 		{
 			pawn = 0b001,

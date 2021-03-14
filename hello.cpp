@@ -594,7 +594,6 @@ int main() {
 	board.fromFen(fen_in1);
 	//std::vector<tmove> moves = board.getMoves();
 
-	/*
 	pass += test_fen();
 	pass += test_knight_moves();
 	pass += test_bishop_moves();
@@ -603,10 +602,8 @@ int main() {
 	pass += test_pawn_moves();
 	pass += test_king_moves();
 	pass += test_castle_moves();
-	*/
 	pass += test_check();
 
-	/*
 	pass += test_name_get();
 	pass += test_sameRow();
 	pass += test_sameDiagonal();
@@ -615,6 +612,5 @@ int main() {
 	pass += test_en_passent_checking_pawn();
 
 	pass += test_move_counts();
-	*/
 	return pass;
 }
