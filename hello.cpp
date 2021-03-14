@@ -318,6 +318,27 @@ bool test_king_moves(){
 		board
 	);
 
+	// King would block its own check
+	std::string fen_k1 = "8/2p5/K2p4/1P5r/5Rk1/8/4P1P1/8 b - - 0 1";
+	board.fromFen(fen_k1);
+	moves = board.getMoves();
+
+	std::set<std::string> s2;
+	s2 = {"g4", "f4", "g3"};
+
+	pass = pass and piece_moves_in_squares(
+		moves,
+		Board::white | Board::king,
+		board,
+		s2
+	);
+
+	pass = pass and squares_in_moves(
+		s2,
+		moves,
+		board
+	);
+
 	return pass;
 }
 
@@ -555,7 +576,6 @@ bool test_ep_double_pin() {
 		0
 	);
 	bool pin = board.isEpDoublePinned(move);
-	std::cout << pin << " a pin\n";
 	pass = pass and pin;
 
 	if (!pass) {
@@ -778,7 +798,6 @@ bool test_perft() {
 	//starting pos
 	Board board;
 	int count;
-	/*
 
 	board.fromFen(fen_in1);
 
@@ -790,6 +809,7 @@ bool test_perft() {
 	pass = pass and count == 8902;
 	std::cout << count << "\n";
 
+	/* passes but takes a few seconds
 	count = perft(4, board);
 	pass = pass and count == 197281;
 	std::cout << count << "\n";
@@ -803,7 +823,6 @@ bool test_perft() {
 	*/
 
 	// Kiwipete
-	/*
 	std::string fen_perft2 = 
 		"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
 	board.fromFen(fen_perft2);
@@ -819,7 +838,6 @@ bool test_perft() {
 	count = perft(3, board);
 	pass = pass and count == 97862;
 	std::cout << count << "\n";
-	*/
 
 	// Pos 3
 	std::string fen_perft3 = "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -";
@@ -834,7 +852,6 @@ bool test_perft() {
 	pass = pass and count == 191;
 	std::cout << count << "\n";
 
-	/*
 	count = perft(3, board);
 	pass = pass and count == 2812;
 	std::cout << count << "\n";
@@ -842,19 +859,23 @@ bool test_perft() {
 	count = perft(4, board);
 	pass = pass and count == 43238;
 	std::cout << count << "\n";
-	*/
 
 
 	/*
-	std::string fen_perft3 = 
+	std::string fen_perft9 = 
+		"8/2p5/3p4/1P5r/KR3pk1/6P1/4P3/8 b - - 0 1";
+
+		"8/K1p5/3p4/1P4kr/1R3p2/8/4P1P1/8 b - - 0 1";
+		"8/2p5/K2p4/1P5r/5Rk1/8/4P1P1/8 b";
 		"r1bqkbnr/pppppppp/2n5/7Q/4P3/8/PPPP1PPP/RNB1KBNR b KQkq";
+		
 	//"r3k2r/p1ppqpb1/bn2pnp1/1N1PN3/1p2P3/5Q1p/PPPBBPPP/R3K2R b KQkq - 0 1";
 	// "r3k2r/p1ppqpb1/bn2pnp1/1B1PN3/1p2P3/2N2Q1p/PPPB1PPP/R3K2R b KQkq - 0 1";
-	board.fromFen(fen_perft3);
-	board.getPieces();
 	*/
-
 	/*
+	board.fromFen(fen_perft9);
+	board.getPieces();
+
 	std::vector<tmove> moves = board.getMoves();
 	for (tmove move : moves) {
 		tsquare source = std::get<0>(move);
@@ -863,8 +884,9 @@ bool test_perft() {
 			std::cout << board.getNameOfSquare(source) << " ";
 			std::cout << board.getNameOfSquare(dest) << " \n";
 		//}
-	}*/
-	//std::cout << board.isAbsolutePinned(board.getSquareOfName("f7")) << "\n";
+	}
+	*/
+	//std::cout << board.isAbsolutePinned(board.getSquareOfName("f4")) << "\n";
 
 	if (!pass) {
 		std::cout << "Perft broken\n";

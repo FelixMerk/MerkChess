@@ -82,8 +82,13 @@ class Board
 
 		bool sameDiagonal(tsquare sq_a, tsquare sq_b);
 		bool sameRowOrColumn(tsquare sq_a, tsquare sq_b);
-		std::vector<tmove> stripByPin(tsquare square, std::vector<tmove> moves);
+		std::vector<tmove> stripByPin(
+			tsquare square,
+			std::vector<tmove> moves,
+			tsquare pinner
+		);
 		bool isAbsolutePinned(tsquare square);
+		tsquare getAbsolutePinner(tsquare square);
 		bool isEpDoublePinned(tmove move);
 		std::set<tsquare> checkStops(tsquare k_pos, tsquare attacker);
 

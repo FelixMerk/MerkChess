@@ -127,7 +127,11 @@ bool Board::sameRowOrColumn(tsquare sq_a, tsquare sq_b) {
 }
 
 
-std::vector<tmove> Board::stripByPin(tsquare square, std::vector<tmove> moves) {
+std::vector<tmove> Board::stripByPin(
+	tsquare square,
+	std::vector<tmove> moves,
+	tsquare pinner
+) {
 	// Use king_pos and otherwise legal moves to strip 
 	// pinned moves
 	// Moves within the pin are legal
@@ -139,11 +143,15 @@ std::vector<tmove> Board::stripByPin(tsquare square, std::vector<tmove> moves) {
 	for (tmove move : moves) {
 		tsquare dest = std::get<1>(move);
 		if (diag) {
-			if (sameDiagonal(dest, king_pos)) {
+			if (sameDiagonal(dest, king_pos) and
+				sameDiagonal(dest, pinner)
+			) {
 				new_moves.push_back(move);
 			}
 		} else if (row) {
-			if (sameRowOrColumn(dest, king_pos)) {
+			if (sameRowOrColumn(dest, king_pos) and
+				sameRowOrColumn(dest, pinner)
+			) {
 				new_moves.push_back(move);
 			}
 		}
@@ -153,14 +161,26 @@ std::vector<tmove> Board::stripByPin(tsquare square, std::vector<tmove> moves) {
 
 
 bool Board::isAbsolutePinned(tsquare square){
+	tsquare pinner = getAbsolutePinner(square);
+	if (pinner == tsquare(-1, -1)) {
+		return false;
+	} else {
+		return true;
+	}
+
+}
+
+tsquare Board::getAbsolutePinner(tsquare square){
 	// Is square pinned to king_pos?
 	//
 	//
 	bool diag = sameDiagonal(square, king_pos);
 	bool row = sameRowOrColumn(square, king_pos);
+	tsquare pinner = tsquare(-1,-1);
 	
 	if (!diag and !row) {
-		return false;
+		// false
+		return tsquare(-1,-1);
 	}
 
 	int opponent;
@@ -188,7 +208,8 @@ bool Board::isAbsolutePinned(tsquare square){
 	// For rows we can follow a side of the board
 	while (
 		(i != 0 and i != 7 and j != 0 and j != 7) or 
-		(((i != 0 and i != 7) or (j != 0 and j != 7)) and ( rise==0 or run==0))
+		(i != 0 and i != 7 and run == 0) or
+		(j != 0 and j != 7 and rise == 0)
 	) {
 		i += rise;
 		j += run;
@@ -196,34 +217,39 @@ bool Board::isAbsolutePinned(tsquare square){
 		if (piece) {
 			if (to_play == (to_play & piece)){
 				// our piece
-				return false;
+				// false
+				return tsquare(-1,-1);
 			} else {
 				// enemy piece
 				if (row) {
 					if (piece == (rook | opponent)) {
 						possible_pin = true;
+						pinner = tsquare(i,j);
 						break;
 					} else if (piece == (queen | opponent)) {
 						possible_pin = true;
+						pinner = tsquare(i,j);
 						break;
 					}
 				} else if (diag) {
 					if (piece == (bishop | opponent)) {
 						possible_pin = true;
+						pinner = tsquare(i,j);
 						break;
 					} else if (piece == (queen | opponent)) {
 						possible_pin = true;
+						pinner = tsquare(i,j);
 						break;
 					}
 				}
 				// Otherwise we have a piece that can't pin
-				return false;
+				return tsquare(-1,-1);
 			}
 		}
 	}
 	if (!possible_pin) {
 		// We reached the edge witout seeing any new pieces
-		return false;
+		return tsquare(-1,-1);
 	}
 
 	// 2. Check for pieces on the close side
@@ -234,13 +260,13 @@ bool Board::isAbsolutePinned(tsquare square){
 		tpiece piece = board[ai][aj];
 		if (piece) {
 			if (piece != (king | to_play)) {
-				return false;
+				return tsquare(-1,-1);
 			}
 		}
 	}
 
 	// We reached the king and are pinned
-	return true;
+	return pinner;
 }
 
 bool Board::isEpDoublePinned(tmove move) {
@@ -742,6 +768,10 @@ std::vector<tmove> Board::getKingMoves(tsquare square) {
 	int i = std::get<0>(square);
 	int j = std::get<1>(square);
 
+	// Hide the King in case king blocks checks?
+	tpiece piece = board[i][j];
+	board[i][j] = 0b0;
+
 	std::vector<int> hop = {-1,0,1};
 	for (int a : hop) {
 		for (int b : hop) {
@@ -757,6 +787,8 @@ std::vector<tmove> Board::getKingMoves(tsquare square) {
 		}
 	}
 	moves = stripIllegal(moves);
+
+	board[i][j] = piece;
 
 
 	// Castle rules
@@ -898,9 +930,16 @@ std::vector<tmove> Board::getMoves() {
 			new_moves = check_stopping_moves;
 		}
 
-		if (((piece ^ to_play) != king) and  isAbsolutePinned(square)) {
+		if ((piece ^ to_play) != king) {
 			// Handle Absolute Pins
-			new_moves = stripByPin(square, new_moves);
+			tsquare potential_pinner = getAbsolutePinner(square);
+			if (potential_pinner != tsquare(-1, -1)){
+				new_moves = stripByPin(
+					square, 
+					new_moves,
+					potential_pinner
+				);
+			}
 		}
 
 		// Handle absolute pins through two pieces
