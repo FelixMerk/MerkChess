@@ -586,6 +586,20 @@ bool test_en_passent_checking_pawn() {
 
 }
 
+bool test_make_moves() {
+	bool pass = true;
+	Board board;
+
+	board.fromFen(fen_in1);
+	std::vector<tmove> moves = board.getMoves();
+
+	board.makeMove(board.getSquareOfName("e4"));
+	board.makeMove(board.getSquareOfName("e5"));
+
+	return pass;
+
+}
+
 int main() {
 	int pass = 0;
 	std::cout << "Hello World\n";
@@ -612,5 +626,7 @@ int main() {
 	pass += test_en_passent_checking_pawn();
 
 	pass += test_move_counts();
+
+	pass += test_make_moves();
 	return pass;
 }

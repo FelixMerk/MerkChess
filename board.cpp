@@ -787,11 +787,11 @@ void Board::makeMove(tmove move) {
 	tsquare source = std::get<0>(move);
 	int si = std::get<0>(source);
 	int sj = std::get<1>(source);
-	tpiece spiece = board[si][sj]
+	tpiece spiece = board[si][sj];
 	tsquare dest = std::get<1>(move);
 	int di = std::get<0>(dest);
 	int dj = std::get<1>(dest);
-	tpiece dpiece = board[di][dj]
+	tpiece dpiece = board[di][dj];
 	tpiece promotion = std::get<2>(move);
 
 	int opponent;
@@ -839,7 +839,7 @@ void Board::makeMove(tmove move) {
 		spiece == (king | to_play) and
 		std::abs(sj-dj) == 2
 	) {
-		int rj = 0
+		int rj = 0;
 		if (sj < dj) {
 			rj = 7;
 		}
@@ -894,8 +894,8 @@ void Board::makeMove(tmove move) {
 	}
 
 	// Switch colors
-	if (to_play == white) { to_play = black}
-	else { to_play = white; fullmove++ }
+	if (to_play == white) { to_play = black; }
+	else { to_play = white; fullmove++; }
 }
 		
 std::string Board::pieceToFen(char piece) {
