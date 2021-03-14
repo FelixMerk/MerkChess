@@ -966,6 +966,60 @@ std::vector<tmove> Board::getMoves() {
 	return moves;
 }
 
+int pieceToVal(tpiece piece) {
+	int p = 1000;
+	switch(piece & 0b111) {
+		case Board::pawn:
+			return p;
+		case Board::bishop: 
+			return 3*p;
+		case Board::knight: 
+			return 3*p;
+		case Board::rook:
+			return 5*p;
+		case Board::queen:
+			return 9*p;
+		case Board::king: 
+			// Leaving your king in check is illegal anyway
+			return 9000*p;
+		default:
+			return 0;
+	}
+}
+
+int Board::evaluate() {
+	// Returns integer value of position for to_play
+	int me = to_play;
+	int opponent;
+	if (to_play == white) {
+		opponent = black;
+	} else {
+		opponent = white;
+	}
+
+	std::vector<tsquare> my_locations = getPieces();
+	to_play = opponent;
+	std::vector<tsquare> op_locations = getPieces();
+	to_play = me;
+
+	int my_val = 0;
+	int op_val = 0;
+
+	for (tsquare square : my_locations) {
+		int i = std::get<0>(square);
+		int j = std::get<1>(square);
+		my_val += pieceToVal(board[i][j]);
+	}
+
+	for (tsquare square : op_locations) {
+		int i = std::get<0>(square);
+		int j = std::get<1>(square);
+		op_val += pieceToVal(board[i][j]);
+	}
+
+	return (my_val - op_val);
+}
+
 complete_move_info Board::makeMove(tmove move) {
 
 	tsquare source = std::get<0>(move);

@@ -95,6 +95,8 @@ class Board
 		complete_move_info makeMove(tmove move);
 		void undoMove(complete_move_info info);
 
+		int evaluate();
+
 		enum Pieces
 		{
 			pawn = 0b001,
