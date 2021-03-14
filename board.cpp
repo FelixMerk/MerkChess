@@ -163,6 +163,13 @@ bool Board::isAbsolutePinned(tsquare square){
 		return false;
 	}
 
+	int opponent;
+	if (to_play == white) {
+		opponent = black;
+	} else {
+		opponent = white;
+	}
+
 	int ai = std::get<0>(square);
 	int aj = std::get<1>(square);
 
@@ -177,9 +184,12 @@ bool Board::isAbsolutePinned(tsquare square){
 	int i = ai;
 	int j = aj;
 	bool possible_pin = false;
-	// On diagonals both will hit the side at once
+	// On diagonals both will hit one side
 	// For rows we can follow a side of the board
-	while ((i != 0 and i != 7) or (j != 0 and j != 7)) {
+	while (
+		(i != 0 and i != 7 and j != 0 and j != 7) or 
+		(((i != 0 and i != 7) or (j != 0 and j != 7)) and ( rise==0 or run==0))
+	) {
 		i += rise;
 		j += run;
 		tpiece piece = board[i][j];
@@ -190,18 +200,18 @@ bool Board::isAbsolutePinned(tsquare square){
 			} else {
 				// enemy piece
 				if (row) {
-					if (rook == (piece & rook)) {
+					if (piece == (rook | opponent)) {
 						possible_pin = true;
 						break;
-					} else if (queen == (piece & queen)) {
+					} else if (piece == (queen | opponent)) {
 						possible_pin = true;
 						break;
 					}
 				} else if (diag) {
-					if (bishop == (piece & bishop)) {
+					if (piece == (bishop | opponent)) {
 						possible_pin = true;
 						break;
-					} else if (queen == (piece & queen)) {
+					} else if (piece == (queen | opponent)) {
 						possible_pin = true;
 						break;
 					}
@@ -221,7 +231,7 @@ bool Board::isAbsolutePinned(tsquare square){
 		ai -= rise;
 		aj -= run;
 
-		tpiece piece = board[i][j];
+		tpiece piece = board[ai][aj];
 		if (piece) {
 			if (piece != (king | to_play)) {
 				return false;
@@ -454,7 +464,6 @@ check_info Board::inCheck(tsquare square) {
 		opponent = white;
 	}
 
-
 	// Pieces can't take their friends, so we stick a temp king in square
 	int i2 = std::get<0>(square);
 	int j2 = std::get<1>(square);
@@ -496,6 +505,7 @@ check_info Board::inCheck(tsquare square) {
 				check_count++;
 			}
 		} else if ((pawn | opponent) == board[i][j]) {
+			// TODO: simplify
 			std::vector<tmove> pawn_moves;
 			int tmp = to_play;
 			to_play = opponent;
@@ -506,6 +516,8 @@ check_info Board::inCheck(tsquare square) {
 				if (pawn_dest == square) {
 					checker = possible_piece;
 					check_count++;
+					// Don't overcount 4x promotion captures
+					break;
 				}
 			}
 		}
@@ -701,6 +713,7 @@ std::vector<tmove> Board::getMoves() {
 	std::vector<tmove> moves = {};
 	std::vector<tsquare> locations = getPieces();
 
+
 	int opponent;
 	if (to_play == white) {
 		opponent = black;
@@ -761,6 +774,7 @@ std::vector<tmove> Board::getMoves() {
 					en_passent_option =  getSquareOfName(en_passent);
 				}
 			}
+
 
 			for (tmove move : new_moves) {
 				tsquare dest = std::get<1>(move);

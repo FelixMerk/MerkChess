@@ -280,6 +280,13 @@ bool test_check(){
 	checks = board.inCheck(board.getSquareOfName("c5")).n;
 	pass = pass and (checks == 1);
 
+	// Pawn with promotion
+	std::string fen_check_2 = 
+		"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q2/PPPBBPpP/R4K1R w kq - 0 2";
+	board.fromFen(fen_check_2);
+	checks = board.inCheck(board.getSquareOfName("f1")).n;
+	pass = pass and (checks == 1);
+
 
 	if (!pass) {
 		std::cout << "Check fail!\n";
@@ -700,12 +707,18 @@ bool test_make_moves() {
 }
 
 int perft(int depth, Board board) {
+	if (depth == 0) {
+		std::cout << board.toFen() << "\n";
+		return 1;
+	}
 	std::vector<tmove> moves = board.getMoves();
 
 	int count = 0;
 
 	if (depth == 1) {
-		return moves.size();
+		count = moves.size();
+		//std::cout << board.toFen() << " " << count << "\n";
+		return count;
 	}
 
 	for (tmove move : moves) {
@@ -722,23 +735,34 @@ bool test_perft() {
 	bool pass = true;
 	//starting pos
 	Board board;
+	int count;
 
 	board.fromFen(fen_in1);
-	int count = perft(2, board);
+
+	count = perft(2, board);
 	pass = pass and count == 400;
 	std::cout << count << "\n";
+
 	count = perft(3, board);
 	pass = pass and count == 8902;
 	std::cout << count << "\n";
-	//count = perft(4, board);
-	// Currently wrong, we get 197469
-	//pass = pass and count == 197281;
-	//std::cout << count << "\n";
 
+	count = perft(4, board);
+	pass = pass and count == 197281;
+	std::cout << count << "\n";
 
+	// Don't think we are performant enough for this
+	/*
+	count = perft(5, board);
+	pass = pass and count == 4865609;
+	std::cout << count << "\n";
+	*/
+
+	// Kiwipete
 	std::string fen_perft2 = 
 		"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
 	board.fromFen(fen_perft2);
+
 	count = perft(1, board);
 	pass = pass and count == 48;
 	std::cout << count << "\n";
@@ -747,6 +771,51 @@ bool test_perft() {
 	pass = pass and count == 2039;
 	std::cout << count << "\n";
 
+	count = perft(3, board);
+	pass = pass and count == 97862;
+	std::cout << count << "\n";
+
+	// Pos 3
+	std::string fen_perft3 = "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -";
+	board.fromFen(fen_perft3);
+
+	count = perft(1, board);
+	pass = pass and count == 14;
+	std::cout << count << "\n";
+
+	count = perft(2, board);
+	pass = pass and count == 191;
+	std::cout << count << "\n";
+
+	count = perft(3, board);
+	pass = pass and count == 2812;
+	std::cout << count << "\n";
+
+	count = perft(4, board);
+	pass = pass and count == 43238;
+	std::cout << count << "\n";
+
+
+	/*
+	std::string fen_perft3 = 
+		"r1bqkbnr/pppppppp/2n5/7Q/4P3/8/PPPP1PPP/RNB1KBNR b KQkq";
+	//"r3k2r/p1ppqpb1/bn2pnp1/1N1PN3/1p2P3/5Q1p/PPPBBPPP/R3K2R b KQkq - 0 1";
+	// "r3k2r/p1ppqpb1/bn2pnp1/1B1PN3/1p2P3/2N2Q1p/PPPB1PPP/R3K2R b KQkq - 0 1";
+	board.fromFen(fen_perft3);
+	board.getPieces();
+	*/
+
+	/*
+	std::vector<tmove> moves = board.getMoves();
+	for (tmove move : moves) {
+		tsquare source = std::get<0>(move);
+		tsquare dest = std::get<1>(move);
+		//if (source == board.getSquareOfName("f7")) {
+			std::cout << board.getNameOfSquare(source) << " ";
+			std::cout << board.getNameOfSquare(dest) << " \n";
+		//}
+	}*/
+	//std::cout << board.isAbsolutePinned(board.getSquareOfName("f7")) << "\n";
 
 	if (!pass) {
 		std::cout << "Perft broken\n";
@@ -754,14 +823,58 @@ bool test_perft() {
 	return true;
 }
 
+bool test_absolute_pin() {
+	bool pass = true;
+	//starting pos
+	Board board;
+	int count;
+
+	std::string fen_test = "rnbqkbnr/pppppppp/8/8/5P2/8/PPPPP1PP/RNBQKBNR b KQkq - 0 1";
+
+	board.fromFen(fen_test);
+	board.getPieces();
+
+	pass = pass and (board.isAbsolutePinned(board.getSquareOfName("d7")) == 0);
+
+	std::string fen_test2 = "3r4/8/8/8/b5b1/1n6/2NRN1N1/3KN3 w - - 0 1";
+	board.fromFen(fen_test2);
+	board.getPieces();
+
+	pass = pass and (board.isAbsolutePinned(board.getSquareOfName("c2")) == 0);
+	pass = pass and (board.isAbsolutePinned(board.getSquareOfName("d2")) == 1);
+	pass = pass and (board.isAbsolutePinned(board.getSquareOfName("e2")) == 1);
+	pass = pass and (board.isAbsolutePinned(board.getSquareOfName("e1")) == 0);
+	pass = pass and (board.isAbsolutePinned(board.getSquareOfName("g2")) == 0);
+
+	std::string fen_test3 = "3q4/8/8/8/8/1pr2b2/2PPP3/3K4 w - - 0 1";
+	board.fromFen(fen_test3);
+	board.getPieces();
+
+	pass = pass and (board.isAbsolutePinned(board.getSquareOfName("c2")) == 0);
+	pass = pass and (board.isAbsolutePinned(board.getSquareOfName("d2")) == 1);
+	pass = pass and (board.isAbsolutePinned(board.getSquareOfName("e2")) == 1);
+
+	std::string fen_test4 = "r1bqkbnr/pppppppp/2n5/7Q/4P3/8/PPPP1PPP/RNB1KBNR b KQkq";
+	board.fromFen(fen_test3);
+	board.getPieces();
+
+	pass = pass and (board.isAbsolutePinned(board.getSquareOfName("f7")) == 1);
+
+	if (!pass) {
+		std::cout << "Abs Pin broken\n";
+	}
+	return pass;
+}
+
 int main() {
 	int pass = 0;
-	std::cout << "Hello World\n";
+	//std::cout << "Hello World\n";
 	//board.printBoard();
 	Board board;
 	board.fromFen(fen_in1);
 	//std::vector<tmove> moves = board.getMoves();
 
+	/*
 	pass += test_fen();
 	pass += test_knight_moves();
 	pass += test_bishop_moves();
@@ -782,7 +895,10 @@ int main() {
 	pass += test_make_moves();
 
 	pass += test_move_counts();
+	*/
 	pass += test_perft();
+	
+	// pass += test_absolute_pin();
 
 	return pass;
 }
