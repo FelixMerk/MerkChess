@@ -5,6 +5,7 @@
 #include <tuple>
 #include <vector>
 #include <set>
+#include <algorithm>
 
 typedef std::tuple<int, int> tsquare;
 typedef unsigned char tpiece;
@@ -83,6 +84,7 @@ class Board
 		bool sameRowOrColumn(tsquare sq_a, tsquare sq_b);
 		std::vector<tmove> stripByPin(tsquare square, std::vector<tmove> moves);
 		bool isAbsolutePinned(tsquare square);
+		bool isEpDoublePinned(tmove move);
 		std::set<tsquare> checkStops(tsquare k_pos, tsquare attacker);
 
 		complete_move_info makeMove(tmove move);

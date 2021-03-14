@@ -517,7 +517,49 @@ bool test_pin() {
 	);
 
 	if (!pass) {
-		std::cout << "Pine broken\n";
+		std::cout << "Pin broken\n";
+	}
+
+	return pass;
+
+}
+
+bool test_ep_double_pin() {
+	bool pass = true;
+	Board board;
+
+	std::string fen_d_pins = "8/2p5/3p4/KP5r/1R2Pp1k/8/6P1/8 b - e3 0 1";
+	board.fromFen(fen_d_pins);
+
+	std::vector<tmove> moves = board.getMoves();
+
+	std::set<std::string> s1;
+	s1 = {"f3", "d5", "c6", "c5"}; // Not e3
+
+	pass = pass and piece_moves_in_squares(
+		moves,
+		Board::black | Board::pawn,
+		board,
+		s1
+	);
+
+	pass = pass and squares_in_moves(
+		s1,
+		moves,
+		board
+	);
+
+	tmove move = tmove(
+		tsquare(board.getSquareOfName("f4")), 
+		tsquare(board.getSquareOfName("e3")), 
+		0
+	);
+	bool pin = board.isEpDoublePinned(move);
+	std::cout << pin << " a pin\n";
+	pass = pass and pin;
+
+	if (!pass) {
+		std::cout << "EP double pin broken\n";
 	}
 
 	return pass;
@@ -736,6 +778,7 @@ bool test_perft() {
 	//starting pos
 	Board board;
 	int count;
+	/*
 
 	board.fromFen(fen_in1);
 
@@ -750,6 +793,7 @@ bool test_perft() {
 	count = perft(4, board);
 	pass = pass and count == 197281;
 	std::cout << count << "\n";
+	*/
 
 	// Don't think we are performant enough for this
 	/*
@@ -759,6 +803,7 @@ bool test_perft() {
 	*/
 
 	// Kiwipete
+	/*
 	std::string fen_perft2 = 
 		"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
 	board.fromFen(fen_perft2);
@@ -774,9 +819,11 @@ bool test_perft() {
 	count = perft(3, board);
 	pass = pass and count == 97862;
 	std::cout << count << "\n";
+	*/
 
 	// Pos 3
 	std::string fen_perft3 = "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -";
+	//std::string fen_perft3 = "8/2p5/3p4/KP5r/1R2Pp1k/8/6P1/8 b - e3";
 	board.fromFen(fen_perft3);
 
 	count = perft(1, board);
@@ -787,6 +834,7 @@ bool test_perft() {
 	pass = pass and count == 191;
 	std::cout << count << "\n";
 
+	/*
 	count = perft(3, board);
 	pass = pass and count == 2812;
 	std::cout << count << "\n";
@@ -794,6 +842,7 @@ bool test_perft() {
 	count = perft(4, board);
 	pass = pass and count == 43238;
 	std::cout << count << "\n";
+	*/
 
 
 	/*
@@ -897,6 +946,8 @@ int main() {
 	pass += test_move_counts();
 	*/
 	pass += test_perft();
+
+	pass += test_ep_double_pin();
 	
 	// pass += test_absolute_pin();
 

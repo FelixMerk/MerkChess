@@ -243,6 +243,112 @@ bool Board::isAbsolutePinned(tsquare square){
 	return true;
 }
 
+bool Board::isEpDoublePinned(tmove move) {
+	// K _ P p _ _ r
+
+	tsquare source = std::get<0>(move);
+	int i = std::get<0>(source);
+	int j = std::get<1>(source);
+	tpiece piece = board[i][j];
+
+	tsquare dest = std::get<1>(move);
+
+	int opponent;
+	if (to_play == white) {
+		opponent = black;
+	} else {
+		opponent = white;
+	}
+
+	if (
+		piece == (pawn | to_play) and
+		dest == getSquareOfName(en_passent)
+	) {
+		int dj = std::get<1>(dest);
+
+		// Check king position
+		int ki = std::get<0>(king_pos);
+		int kj = std::get<1>(king_pos);
+		if (ki != i) {
+			return false;
+		}
+
+		// Find King
+		if (j > kj) {
+			// Search left
+			int aj = std::min(j, dj);
+			while (aj != 0){
+				aj--;
+				tpiece piece = board[i][aj];
+
+				if (piece) {
+					if (piece != (king | to_play)) {
+						return false;
+					}
+				}
+			}
+		} else {
+			// Search right
+			int aj = std::max(j, dj);
+			while (aj != 7){
+				aj++;
+				tpiece piece = board[i][aj];
+
+				if (piece) {
+					if (piece != (king | to_play)) {
+						return false;
+					}
+				}
+			}
+		}
+
+		// Find Pinner
+		if (j < kj) {
+			// Search left
+			int aj = std::min(j, dj);
+			while (aj != 0){
+				aj--;
+				tpiece piece = board[i][aj];
+
+				if (piece) {
+					if (
+						piece == (rook | opponent) or
+						piece == (queen | opponent)
+					) {
+						return true;
+					} else {
+						return false;
+					}
+
+				}
+			}
+		} else {
+			// Search right
+			int aj = std::max(j, dj);
+			while (aj != 7){
+				aj++;
+				tpiece piece = board[i][aj];
+
+				if (piece) {
+					if (
+						piece == (rook | opponent) or
+						piece == (bishop | opponent)
+					) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+		}
+		// No pinner
+		return false;
+
+	} else {
+		return false;
+	}
+
+}
 
 std::set<tsquare> Board::checkStops(tsquare k_pos, tsquare attacker) {
 	std::set<tsquare> squares = {};
@@ -282,7 +388,9 @@ std::set<tsquare> Board::checkStops(tsquare k_pos, tsquare attacker) {
 	int run = (0 < (j - kj)) - ((j - kj) < 0);
 
 	// we got the same square twice as input!
-	if ((i == ki) and (j = kj)) {
+	if ((i == ki) and (j == kj)) {
+		std::cout << getNameOfSquare(k_pos) << " " << ki << kj << " e \n";
+		std::cout << getNameOfSquare(attacker) << " " << i << j << " o \n";
 		throw 97;
 	}
 
@@ -758,6 +866,7 @@ std::vector<tmove> Board::getMoves() {
 				break;
 			default: break;
 		}
+
 		if (((piece ^ to_play) != king) and  check_count) {
 			// Handle checks
 			std::vector<tmove> check_stopping_moves;
@@ -787,10 +896,32 @@ std::vector<tmove> Board::getMoves() {
 			}
 
 			new_moves = check_stopping_moves;
-		} else if (((piece ^ to_play) != king) and  isAbsolutePinned(square)) {
+		}
+
+		if (((piece ^ to_play) != king) and  isAbsolutePinned(square)) {
 			// Handle Absolute Pins
 			new_moves = stripByPin(square, new_moves);
 		}
+
+		// Handle absolute pins through two pieces
+		// ie absolute en passent pins
+		if (((piece ^ to_play) == pawn) and  (en_passent != "")) {
+			std::vector<tmove> safe_moves;
+			for (tmove move : new_moves) {
+				tsquare dest = std::get<1>(move);
+				if (
+					dest == getSquareOfName(en_passent)
+				) {
+					if (!isEpDoublePinned(move)) {
+						safe_moves.push_back(move);
+					}
+				} else {
+					safe_moves.push_back(move);
+				}
+			}
+			new_moves = safe_moves;
+		}
+
 		moves.insert(moves.end(), new_moves.begin(), new_moves.end());
 	}
 	return moves;
