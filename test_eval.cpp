@@ -136,7 +136,7 @@ bool do_alphabeta(
 			printTmove(pv_move, board);
 		}
 
-		std::cout << "Minimax failure!\n";
+		std::cout << "Alpha Beta failure!\n";
 		std::cout << "Expected move:\n";
 		printTmove(expected_move, board);
 		std::cout << "Actual move:\n";

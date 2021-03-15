@@ -1032,12 +1032,9 @@ minimax_val Board::minimax(int depth) {
 		if (moves.size() == 0) {
 			// checkmate or stalemate
 			if (inCheck(king_pos).n > 0) {
-				//std::cout << "Checkmate found\n";
-				//std::cout << value << "\n";
 				return {best_move, -900000};
 			}
 			else {
-				std::cout << "Stalemate found\n";
 				return {best_move, 0};
 			}
 		}
