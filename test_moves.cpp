@@ -135,6 +135,10 @@ bool test_knight_moves(){
 		board
 	);
 
+	if (!pass) {
+		std::cout << "Knight fail!\n";
+	}
+
 	return pass;
 }
 
@@ -161,6 +165,10 @@ bool test_bishop_moves(){
 		moves,
 		board
 	);
+
+	if (!pass) {
+		std::cout << "Bishop fail!\n";
+	}
 
 	return pass;
 }
@@ -192,6 +200,10 @@ bool test_rook_moves(){
 		board
 	);
 
+	if (!pass) {
+		std::cout << "Rook fail!\n";
+	}
+
 	return pass;
 }
 
@@ -219,6 +231,10 @@ bool test_pawn_moves(){
 		moves,
 		board
 	);
+
+	if (!pass) {
+		std::cout << "Pawn fail!\n";
+	}
 
 	return pass;
 }
@@ -324,7 +340,7 @@ bool test_king_moves(){
 	moves = board.getMoves();
 
 	std::set<std::string> s2;
-	s2 = {"g4", "f4", "g3"};
+	s2 = {"g5", "f4", "g3"};
 
 	pass = pass and piece_moves_in_squares(
 		moves,
@@ -338,6 +354,10 @@ bool test_king_moves(){
 		moves,
 		board
 	);
+
+	if (!pass) {
+		std::cout << "King fail!\n";
+	}
 
 	return pass;
 }
@@ -452,6 +472,11 @@ bool test_castle_moves(){
 		moves,
 		board
 	);
+
+	if (!pass) {
+		std::cout << "Castle fail!\n";
+	}
+
 	return pass;
 }
 
@@ -809,13 +834,14 @@ bool test_perft() {
 	pass = pass and count == 8902;
 	std::cout << count << "\n";
 
-	/* passes but takes a few seconds
+	// passes but takes a few seconds 
+	/*
 	count = perft(4, board);
 	pass = pass and count == 197281;
 	std::cout << count << "\n";
 	*/
 
-	// Don't think we are performant enough for this
+	// This takes a while, but we pass 4865609
 	/*
 	count = perft(5, board);
 	pass = pass and count == 4865609;
@@ -926,7 +952,7 @@ bool test_absolute_pin() {
 	pass = pass and (board.isAbsolutePinned(board.getSquareOfName("e2")) == 1);
 
 	std::string fen_test4 = "r1bqkbnr/pppppppp/2n5/7Q/4P3/8/PPPP1PPP/RNB1KBNR b KQkq";
-	board.fromFen(fen_test3);
+	board.fromFen(fen_test4);
 	board.getPieces();
 
 	pass = pass and (board.isAbsolutePinned(board.getSquareOfName("f7")) == 1);
@@ -945,7 +971,6 @@ int main() {
 	board.fromFen(fen_in1);
 	//std::vector<tmove> moves = board.getMoves();
 
-	/*
 	pass += test_fen();
 	pass += test_knight_moves();
 	pass += test_bishop_moves();
@@ -964,14 +989,12 @@ int main() {
 	pass += test_en_passent_checking_pawn();
 
 	pass += test_make_moves();
-
 	pass += test_move_counts();
-	*/
+
 	pass += test_perft();
 
 	pass += test_ep_double_pin();
-	
-	// pass += test_absolute_pin();
+	pass += test_absolute_pin();
 
 	return pass;
 }

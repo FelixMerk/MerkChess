@@ -1055,19 +1055,6 @@ minimax_val Board::minimax(int depth) {
 
 			// Unmake
 			undoMove(info);
-			if (depth == 4 and false) {
-				std::cout << value << " = val for:\n";
-				std::cout << branch_val << " = val for:\n";
-				tsquare source = std::get<0>(move);
-				int i = std::get<0>(source);
-				int j = std::get<1>(source);
-				tpiece piece = board[i][j];
-				tsquare dest = std::get<1>(move);
-		       		tpiece promo = std::get<2>(move);
-		       		std::cout << getPiece(piece) << " moves: ";
-				std::cout << getNameOfSquare (source) << "->";
-				std::cout << getNameOfSquare (dest) << "\n";
-			}
 		}
 	}
 
