@@ -1020,7 +1020,7 @@ int Board::evaluate() {
 }
 
 minimax_val Board::minimax(int depth) {
-	int value = -900000;
+	int value = -9000000;
 	tmove best_move;
 
 	if (depth == 0) {
@@ -1034,7 +1034,7 @@ minimax_val Board::minimax(int depth) {
 			if (inCheck(king_pos).n > 0) {
 				//std::cout << "Checkmate found\n";
 				//std::cout << value << "\n";
-				return {best_move, value};
+				return {best_move, -900000};
 			}
 			else {
 				std::cout << "Stalemate found\n";
@@ -1059,6 +1059,78 @@ minimax_val Board::minimax(int depth) {
 	}
 
 	return {best_move, value};
+}
+
+minimax_val Board::alphabeta(int depth, int alpha, int beta) {
+	int value = -9000000;
+	tmove best_move;
+	std::vector<tmove> best_line;
+
+	if (depth == 0) {
+		// Should qiuescent search on checks ...
+		value = evaluate();
+	} else {
+		std::vector<tmove> moves = getMoves();
+
+		if (moves.size() == 0) {
+			// checkmate or stalemate
+			if (inCheck(king_pos).n > 0) {
+				//std::cout << "Checkmate found\n";
+				//std::cout << value << "\n";
+				return {best_move, -900000};
+			}
+			else {
+				std::cout << "Stalemate found\n";
+				return {best_move, 0};
+			}
+		}
+			
+		for (tmove move : moves) {
+			// Make
+			complete_move_info info = makeMove(move);
+
+			// Check eval
+			auto ab_search = alphabeta(
+				depth - 1,
+				-beta,
+				-alpha
+			);
+
+			int branch_val = -1 * ab_search.val;
+
+			// Unmake
+			undoMove(info);
+
+			if (branch_val > value) {
+				/*
+				if (depth == 5) {
+					std::cout << "New game in town \n";
+					std::cout << value << "\n";
+					std::cout << branch_val << "\n";
+					std::cout << "We now pick\n";
+					tsquare source = std::get<0>(move);
+					int i = std::get<0>(source);
+					int j = std::get<1>(source);
+					tsquare dest = std::get<1>(move);
+					tpiece piece = board[i][j];
+					std::cout << getPiece(piece) << "\n";
+					std::cout << getNameOfSquare(source) << " -> ";
+					std::cout << getNameOfSquare(dest) << "\n";
+				}*/
+				best_move = move;
+				value = branch_val;
+				best_line = ab_search.pv;
+			}
+
+			alpha = std::max(value, alpha);
+			if (alpha >= beta) {
+				break;
+			}
+		}
+	}
+
+	best_line.push_back(best_move);
+	return {best_move, value, best_line};
 }
 
 complete_move_info Board::makeMove(tmove move) {

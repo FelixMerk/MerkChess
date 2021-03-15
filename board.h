@@ -34,6 +34,7 @@ typedef struct minimax_val
 
 	tmove move;
 	int val;
+	std::vector<tmove> pv;
 } minimax_val;
 
 
@@ -104,6 +105,7 @@ class Board
 
 		int evaluate();
 		minimax_val minimax(int depth);
+		minimax_val alphabeta(int depth, int alpha, int beta);
 
 		enum Pieces
 		{

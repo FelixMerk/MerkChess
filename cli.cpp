@@ -66,6 +66,24 @@ void moveMinimax(Board& board){
 	board.makeMove(move);
 }
 
+void moveAlphaBeta(Board& board){
+	int alpha = -1000000;
+	int beta = 1000000;
+	tmove move = board.alphabeta(6, alpha, beta).move;
+
+	tsquare source = std::get<0>(move);
+	tsquare dest = std::get<1>(move);
+	tpiece promo = std::get<2>(move);
+
+	std::cout << board.getNameOfSquare(source) << " -> ";
+	std::cout << board.getNameOfSquare(dest) << " \n";
+	if (promo != 0) {
+		std::cout << board.getPiece(promo) << " \n";
+	}
+
+	board.makeMove(move);
+}
+
 int main() {
 	int pass = 0;
 	std::cout << "Hello Player\n";
@@ -74,9 +92,10 @@ int main() {
 	board.fromFen(fen_in1);
 
 	int i = 0;
-	while (i < 10){
+	while (i < 40){
 		//moveFirst(board);
-		moveMinimax(board);
+		//moveMinimax(board);
+		moveAlphaBeta(board);
 
 		tmove user_move = getUsersMove(board);
 		board.makeMove(user_move);
