@@ -723,16 +723,16 @@ std::vector<tmove> Board::getPawnMoves(tsquare square) {
 				// Promotion square
 				moves.push_back(
 					tmove(square, tsquare(i+iinc, j+jinc),
-						white | queen));
+						to_play | queen));
 				moves.push_back(
 					tmove(square, tsquare(i+iinc, j+jinc),
-						white | bishop));
+						to_play | bishop));
 				moves.push_back(
 					tmove(square, tsquare(i+iinc, j+jinc),
-						white | knight));
+						to_play | knight));
 				moves.push_back(
 					tmove(square, tsquare(i+iinc, j+jinc),
-						white | rook));
+						to_play | rook));
 			} else {
 				moves.push_back(tmove(square, tsquare(i+iinc, j+jinc), 0));
 			}

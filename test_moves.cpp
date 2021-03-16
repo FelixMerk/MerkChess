@@ -901,16 +901,16 @@ bool test_perft() {
 	count = perft(2, board);
 	pass = pass and count == 264;
 	std::cout << count << "\n";
-	*/
 
 	count = perft(3, board);
 	pass = pass and count == 9467;
 	std::cout << count << "\n";
+	*/
 
-	/*
 	count = perft(4, board);
 	pass = pass and count == 422333;
 	std::cout << count << "\n";
+	/*
 	*/
 
 
