@@ -963,6 +963,29 @@ std::vector<tmove> Board::getMoves() {
 	return moves;
 }
 
+std::vector<tmove> Board::orderMoves(std::vector<tmove> moves) {
+	std::vector<tmove> captures = {};
+	std::vector<tmove> boring_moves = {};
+
+	for (tmove move : moves) {
+		tsquare source = std::get<0>(move);
+		tsquare dest = std::get<1>(move);
+		int di = std::get<0>(dest);
+		int dj = std::get<1>(dest);
+		tpiece dpiece = board[di][dj];
+
+		if (dpiece != 0) {
+			// Captures
+			captures.push_back(move);
+		} else {
+			boring_moves.push_back(move);
+		}
+	}
+
+	captures.insert(captures.end(), boring_moves.begin(), boring_moves.end());
+	return captures;
+}
+
 int pieceToVal(tpiece piece) {
 	int p = 1000;
 	switch(piece & 0b111) {
@@ -1078,6 +1101,8 @@ minimax_val Board::alphabeta(int depth, int alpha, int beta) {
 				return {best_move, 0};
 			}
 		}
+
+		moves = orderMoves(moves);
 			
 		for (tmove move : moves) {
 			// Make
