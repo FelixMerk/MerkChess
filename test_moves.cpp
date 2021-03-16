@@ -804,7 +804,7 @@ int perft(int depth, Board board) {
 
 	if (depth == 1) {
 		count = moves.size();
-		std::cout << board.toFen() << " " << count << "\n";
+		//std::cout << board.toFen() << " " << count << "\n";
 		return count;
 	}
 
@@ -893,7 +893,6 @@ bool test_perft() {
 		"r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1";
 	board.fromFen(fen_perft4);
 
-	/*
 	count = perft(1, board);
 	pass = pass and count == 6;
 	std::cout << count << "\n";
@@ -905,18 +904,66 @@ bool test_perft() {
 	count = perft(3, board);
 	pass = pass and count == 9467;
 	std::cout << count << "\n";
-	*/
 
+	/* Works but takes a bit
 	count = perft(4, board);
 	pass = pass and count == 422333;
 	std::cout << count << "\n";
-	/*
 	*/
 
+	// Pos 5
+	
+	std::string fen_perft5 = 
+		"rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8";
+	board.fromFen(fen_perft5);
 
-	std::string fen_perft9 = 
-		"1r2k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P1RPP/R2Q2K1 w - - 0 1";
+	count = perft(1, board);
+	pass = pass and count == 44;
+	std::cout << count << "\n";
+
+	count = perft(2, board);
+	pass = pass and count == 1486;
+	std::cout << count << "\n";
+
+	count = perft(3, board);
+	pass = pass and count == 62379;
+	std::cout << count << "\n";
+
+	/* Works but takes a bit
+	count = perft(4, board);
+	pass = pass and count == 2103487;
+	std::cout << count << "\n";
+	*/
+
+	// Pos 6
+	
+	std::string fen_perft6 = 
+		"r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 1";
+	board.fromFen(fen_perft6);
+
+	count = perft(1, board);
+	pass = pass and count == 44;
+	std::cout << count << "\n";
+
+	count = perft(2, board);
+	pass = pass and count == 2079;
+	std::cout << count << "\n";
+
+	count = perft(3, board);
+	pass = pass and count == 89890;
+	std::cout << count << "\n";
+
+	/* Works but takes a bit
+	count = perft(4, board);
+	pass = pass and count == 3894594;
+	std::cout << count << "\n";
+	*/
+
 	/*
+	std::string fen_perft9 = 
+		"r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/P2P1RPP/r2Q2K1 w kq - 0 2";
+		"r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/P2P1RPP/Q5K1 w kq - 0 1";
+		"1r2k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P1RPP/R2Q2K1 w - - 0 1";
 		"8/2p5/3p4/1P5r/KR3pk1/6P1/4P3/8 b - - 0 1";
 
 		"8/K1p5/3p4/1P4kr/1R3p2/8/4P1P1/8 b - - 0 1";
@@ -929,7 +976,12 @@ bool test_perft() {
 	/*
 	board.fromFen(fen_perft9);
 	board.getPieces();
-
+	board.getMoves();
+	board.makeMove(tmove(
+		board.getSquareOfName("d1"), 
+		board.getSquareOfName("a1"),
+		0
+	));
 	std::vector<tmove> moves = board.getMoves();
 	for (tmove move : moves) {
 		tsquare source = std::get<0>(move);

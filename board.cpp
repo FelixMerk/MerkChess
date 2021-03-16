@@ -1214,17 +1214,19 @@ complete_move_info Board::makeMove(tmove move) {
 	}
 
 	// Rook moves
+	// Note we have to check both i and j in case of the other rook
+	// or promo getting to a8/h8
 	if (spiece == (rook | to_play)) {
 		if (to_play == white){
-			if (sj == 0) {
+			if (sj == 0 and si == 7) {
 				white_queenside = 0;
-			} else if (sj == 7) {
+			} else if (sj == 7 and si == 7) {
 				white_kingside = 0;
 			}
 		} else if (to_play == black) {
-			if (sj == 0) {
+			if (sj == 0 and si == 0) {
 				black_queenside = 0;
-			} else if (sj == 7) {
+			} else if (sj == 7 and si == 0) {
 				black_kingside = 0;
 			}
 		}
@@ -1233,15 +1235,15 @@ complete_move_info Board::makeMove(tmove move) {
 	// We capture a rook
 	if (dpiece == (rook | opponent)) {
 		if (opponent == white){
-			if (dj == 0) {
+			if (dj == 0 and di == 7) {
 				white_queenside = 0;
-			} else if (dj == 7) {
+			} else if (dj == 7 and di == 7) {
 				white_kingside = 0;
 			}
 		} else if (opponent == black) {
-			if (dj == 0) {
+			if (dj == 0 and di == 0) {
 				black_queenside = 0;
-			} else if (dj == 7) {
+			} else if (dj == 7 and di == 0) {
 				black_kingside = 0;
 			}
 		}
