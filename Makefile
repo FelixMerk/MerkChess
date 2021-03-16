@@ -20,7 +20,7 @@ test_moves.o: test_moves.cpp
 	g++ -c test_moves.cpp --std=c++11
 
 test_eval: test_eval.o board.o
-	g++ -o test_eval test_eval.o board.o -O3 --std=c++11
+	g++ -o test_eval test_eval.o board.o --std=c++11 -O3
 	
 test_eval.o: test_eval.cpp
 	g++ -c test_eval.cpp --std=c++11

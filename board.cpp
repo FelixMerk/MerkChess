@@ -22,8 +22,6 @@ void Board::clearBoard() {
 			board[i][j] = 0b0;
 		}
 	}
-	//board[0][0] = pawn | white;
-	//board[2][5] = king | black;
 }
 
 void Board::printBoard() {
@@ -744,10 +742,10 @@ std::vector<tmove> Board::getPawnMoves(tsquare square) {
 	if (to_play == white) {
 		sub_pawn(-1, 0, 6, 1);
 		if (j!=0) {
-			sub_pawn(-1, -1, 6, -1);
+			sub_pawn(-1, -1, -1, 1);
 		}
 		if (j!=7) {
-			sub_pawn(-1, 1, 6, -1);
+			sub_pawn(-1, 1, -1, 1);
 		}
 	} else {
 		sub_pawn(1, 0, 1, 6);
@@ -1077,7 +1075,6 @@ minimax_val Board::alphabeta(int depth, int alpha, int beta) {
 				return {best_move, -900000};
 			}
 			else {
-				std::cout << "Stalemate found\n";
 				return {best_move, 0};
 			}
 		}

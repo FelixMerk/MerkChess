@@ -179,7 +179,7 @@ bool test_alphabeta(){
 }
 
 int main () {
-	test_positions();
+	//test_positions();
 	//test_minimax();
 	test_alphabeta();
 	return 0;

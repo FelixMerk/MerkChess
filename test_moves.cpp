@@ -804,7 +804,7 @@ int perft(int depth, Board board) {
 
 	if (depth == 1) {
 		count = moves.size();
-		//std::cout << board.toFen() << " " << count << "\n";
+		std::cout << board.toFen() << " " << count << "\n";
 		return count;
 	}
 
@@ -824,6 +824,7 @@ bool test_perft() {
 	Board board;
 	int count;
 
+	/*
 	board.fromFen(fen_in1);
 
 	count = perft(2, board);
@@ -833,6 +834,7 @@ bool test_perft() {
 	count = perft(3, board);
 	pass = pass and count == 8902;
 	std::cout << count << "\n";
+	*/
 
 	// passes but takes a few seconds 
 	/*
@@ -848,6 +850,7 @@ bool test_perft() {
 	std::cout << count << "\n";
 	*/
 
+	/*
 	// Kiwipete
 	std::string fen_perft2 = 
 		"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
@@ -867,7 +870,6 @@ bool test_perft() {
 
 	// Pos 3
 	std::string fen_perft3 = "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - -";
-	//std::string fen_perft3 = "8/2p5/3p4/KP5r/1R2Pp1k/8/6P1/8 b - e3";
 	board.fromFen(fen_perft3);
 
 	count = perft(1, board);
@@ -885,10 +887,36 @@ bool test_perft() {
 	count = perft(4, board);
 	pass = pass and count == 43238;
 	std::cout << count << "\n";
+	*/
 
+	std::string fen_perft4 = 
+		"r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1";
+	board.fromFen(fen_perft4);
 
 	/*
+	count = perft(1, board);
+	pass = pass and count == 6;
+	std::cout << count << "\n";
+
+	count = perft(2, board);
+	pass = pass and count == 264;
+	std::cout << count << "\n";
+	*/
+
+	count = perft(3, board);
+	pass = pass and count == 9467;
+	std::cout << count << "\n";
+
+	/*
+	count = perft(4, board);
+	pass = pass and count == 422333;
+	std::cout << count << "\n";
+	*/
+
+
 	std::string fen_perft9 = 
+		"1r2k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P1RPP/R2Q2K1 w - - 0 1";
+	/*
 		"8/2p5/3p4/1P5r/KR3pk1/6P1/4P3/8 b - - 0 1";
 
 		"8/K1p5/3p4/1P4kr/1R3p2/8/4P1P1/8 b - - 0 1";
@@ -957,6 +985,7 @@ bool test_absolute_pin() {
 
 	pass = pass and (board.isAbsolutePinned(board.getSquareOfName("f7")) == 1);
 
+
 	if (!pass) {
 		std::cout << "Abs Pin broken\n";
 	}
@@ -971,6 +1000,7 @@ int main() {
 	board.fromFen(fen_in1);
 	//std::vector<tmove> moves = board.getMoves();
 
+	/*
 	pass += test_fen();
 	pass += test_knight_moves();
 	pass += test_bishop_moves();
@@ -990,11 +1020,12 @@ int main() {
 
 	pass += test_make_moves();
 	pass += test_move_counts();
+	*/
 
 	pass += test_perft();
 
-	pass += test_ep_double_pin();
-	pass += test_absolute_pin();
+	//pass += test_ep_double_pin();
+	//pass += test_absolute_pin();
 
 	return pass;
 }
