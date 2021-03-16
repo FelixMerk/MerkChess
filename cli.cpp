@@ -4,10 +4,6 @@
 #include "board.h"
 
 
-
-std::string fen_in1 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-
-
 tmove getUsersMove(Board& board) {
 	std::string umove;
 	std::cout << "Enter your move (like e2e4): ";
@@ -66,10 +62,15 @@ void moveMinimax(Board& board){
 	board.makeMove(move);
 }
 
-void moveAlphaBeta(Board& board){
+std::vector<tmove> moveAlphaBeta(Board& board, std::vector<tmove> old_pv){
 	int alpha = -1000000;
 	int beta = 1000000;
-	tmove move = board.alphabeta(6, alpha, beta).move;
+	if (!old_pv.empty()){
+		old_pv.pop_back();
+	}
+	auto info = board.alphabeta(6, alpha, beta, old_pv);
+	tmove move = info.move;
+	std::vector<tmove> pv = info.pv;
 
 	tsquare source = std::get<0>(move);
 	tsquare dest = std::get<1>(move);
@@ -82,20 +83,25 @@ void moveAlphaBeta(Board& board){
 	}
 
 	board.makeMove(move);
+	return pv;
 }
 
 int main() {
 	int pass = 0;
 	std::cout << "Hello Player\n";
 
+	std::string fen_in1 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
+
 	Board board;
 	board.fromFen(fen_in1);
+	std::vector<tmove> pv = {};
 
 	int i = 0;
 	while (i < 40){
 		//moveFirst(board);
 		//moveMinimax(board);
-		moveAlphaBeta(board);
+		pv = moveAlphaBeta(board, pv);
 
 		tmove user_move = getUsersMove(board);
 		board.makeMove(user_move);

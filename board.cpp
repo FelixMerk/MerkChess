@@ -963,9 +963,19 @@ std::vector<tmove> Board::getMoves() {
 	return moves;
 }
 
-std::vector<tmove> Board::orderMoves(std::vector<tmove> moves) {
+std::vector<tmove> Board::orderMoves(
+	std::vector<tmove> moves,
+	std::vector<tmove> old_pv /*= {}*/
+) {
 	std::vector<tmove> captures = {};
+	std::vector<tmove> pins = {};
 	std::vector<tmove> boring_moves = {};
+
+	tmove prev_choice = tmove(-1,-1);
+	if (!old_pv.empty()) {
+		prev_choice = old_pv.back();
+	}
+
 
 	for (tmove move : moves) {
 		tsquare source = std::get<0>(move);
@@ -974,14 +984,24 @@ std::vector<tmove> Board::orderMoves(std::vector<tmove> moves) {
 		int dj = std::get<1>(dest);
 		tpiece dpiece = board[di][dj];
 
-		if (dpiece != 0) {
+		if (move == prev_choice) {
+			// Previous Principal Variation
+			captures.insert(captures.begin(), move);
+		} else if (dpiece != 0) {
 			// Captures
 			captures.push_back(move);
+		} else if (
+			sameDiagonal(king_pos, dest) or
+			sameRowOrColumn(king_pos, dest)
+		) {
+			// Pins and Checks
+			pins.push_back(move);
 		} else {
 			boring_moves.push_back(move);
 		}
 	}
 
+	captures.insert(captures.end(), pins.begin(), pins.end());
 	captures.insert(captures.end(), boring_moves.begin(), boring_moves.end());
 	return captures;
 }
@@ -1079,7 +1099,11 @@ minimax_val Board::minimax(int depth) {
 	return {best_move, value};
 }
 
-minimax_val Board::alphabeta(int depth, int alpha, int beta) {
+minimax_val Board::alphabeta(
+	int depth, int alpha, int beta,
+	std::vector<tmove> old_pv /*= {}*/
+
+) {
 	int value = -9000000;
 	tmove best_move;
 	std::vector<tmove> best_line;
@@ -1102,7 +1126,10 @@ minimax_val Board::alphabeta(int depth, int alpha, int beta) {
 			}
 		}
 
-		moves = orderMoves(moves);
+		moves = orderMoves(moves, old_pv);
+		if (old_pv.size() > 0) {
+			old_pv.pop_back();
+		}
 			
 		for (tmove move : moves) {
 			// Make
@@ -1112,7 +1139,8 @@ minimax_val Board::alphabeta(int depth, int alpha, int beta) {
 			auto ab_search = alphabeta(
 				depth - 1,
 				-beta,
-				-alpha
+				-alpha,
+				old_pv
 			);
 
 			int branch_val = -1 * ab_search.val;

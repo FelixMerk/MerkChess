@@ -102,11 +102,17 @@ class Board
 
 		complete_move_info makeMove(tmove move);
 		void undoMove(complete_move_info info);
-		std::vector<tmove> orderMoves(std::vector<tmove> moves);
+		std::vector<tmove> orderMoves(
+			std::vector<tmove> moves,
+			std::vector<tmove> old_pv = {}
+		);
 
 		int evaluate();
 		minimax_val minimax(int depth);
-		minimax_val alphabeta(int depth, int alpha, int beta);
+		minimax_val alphabeta(
+			int depth, int alpha, int beta,
+			std::vector<tmove> old_pv = {}
+		);
 
 		enum Pieces
 		{
