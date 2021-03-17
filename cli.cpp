@@ -76,12 +76,13 @@ std::vector<tmove> moveAlphaBeta(Board& board, std::vector<tmove> old_pv){
 	auto info = board.alphabeta(6, alpha, beta, old_pv);
 	tmove move = info.move;
 	std::vector<tmove> pv = info.pv;
+	int val = info.val;
 
 	tsquare source = std::get<0>(move);
 	tsquare dest = std::get<1>(move);
 	tpiece promo = std::get<2>(move);
 
-	std::cout << "Primary Variation:\n";
+	std::cout << "Primary Variation: " << val << "\n";
 	std::cout << "    Expect print errors deeper as board get out of sync:\n";
 	for (tmove pv_move : pv) {
 		std::cout << "    ";
@@ -103,6 +104,7 @@ int main() {
 	std::cout << "Hello Player\n";
 
 	std::string fen_in1 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+	// fen_in1 = "rq5r/p3kp2/4p2p/1p4pQ/4N3/4R3/Pn3PPP/3R2K1 w - - 0 29";
 
 
 	Board board;
@@ -111,12 +113,13 @@ int main() {
 
 	int i = 0;
 	while (i < 40){
+		tmove user_move = getUsersMove(board);
+		board.makeMove(user_move);
+
 		//moveFirst(board);
 		//moveMinimax(board);
 		pv = moveAlphaBeta(board, pv);
 
-		tmove user_move = getUsersMove(board);
-		board.makeMove(user_move);
 
 		if (i == 5 or i == 10) {
 			std::cout << "Game state:\n";

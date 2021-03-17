@@ -1027,16 +1027,99 @@ int pieceToVal(tpiece piece) {
 	}
 }
 
+int pieceLoctionToVal(tpiece piece, int i, int j, int gamestate) {
+	// location is normalized (i = 7 - i for white)
+	// Gamestate 0 = opening, 1 = middlegame, 2 = endgame
+	int p = 1000;
+	int bonus = 9;
+	switch(piece & 0b111) {
+		case Board::pawn:
+			// Good if further along
+			bonus += i*i;
+			if (i == 6) {
+				bonus += p;
+			}
+			// Central pawns are better
+			bonus += 10;
+			if (j < 3) {
+				bonus -= 20*(3-j);
+			}
+			if (j > 4) {
+				bonus -= 20*(j-4);
+			}
+			break;
+		case Board::bishop: 
+			if (j == 0 or j == 7) {
+				bonus -= 100;
+			}
+			if (i == 0) {
+				bonus -= 100;
+			}
+			break;
+		case Board::knight: 
+			// Good if centralized
+			if (j == 0 or j == 7) {
+				bonus -= 300;
+			}
+			if (i == 0 or i == 7) {
+				bonus -= 300;
+			}
+			if (j == 3 or j == 4) {
+				bonus += 100;
+			}
+			if (i == 3 or i == 4) {
+				bonus -= 100;
+			}
+			break;
+		case Board::rook:
+			if (i == 6) {
+				bonus += 900;
+			}
+			break;
+		case Board::queen:
+			// Avoid early moves
+			if (gamestate == 0) {
+				if (i != 0 or j != 3) {
+					bonus -= 100;
+				}
+			}
+		case Board::king: 
+			if (gamestate != 2) {
+				if (i == 0) {
+					bonus += 200;
+				}
+				if (i > 1) {
+					bonus -= 200;
+				}
+			} else {
+				// Centralize in endgame
+				if (i < 3) {
+					bonus -= 50*(3-i);
+				}
+				if (j < 3) {
+					bonus -= 25*(3-j);
+				}
+				if (j > 4) {
+					bonus -= 25*(j-4);
+				}
+			}
+			break;
+		default:
+			break;
+	}
+	return bonus;
+}
+
 int Board::evaluate() {
 	// Returns integer value of position for to_play
 	int me = to_play;
 	int opponent;
+
 	if (to_play == white) {
 		opponent = black;
 	} else {
 		opponent = white;
 	}
-
 	std::vector<tsquare> my_locations = getPieces();
 	to_play = opponent;
 	std::vector<tsquare> op_locations = getPieces();
@@ -1045,16 +1128,55 @@ int Board::evaluate() {
 	int my_val = 0;
 	int op_val = 0;
 
+	int gamestate = 0; //opening
+	if (fullmove > 8) {
+		// midgame
+		gamestate = 1;
+	}
+	if (my_locations.size() < 6 or op_locations.size() < 6){
+		// endgame
+		gamestate = 2;
+	}
+
+
 	for (tsquare square : my_locations) {
 		int i = std::get<0>(square);
 		int j = std::get<1>(square);
+
+		tpiece piece = pieceToVal(board[i][j]);
 		my_val += pieceToVal(board[i][j]);
+
+		int norm_i;
+		if (to_play == white) {
+			norm_i = 7-i;
+		} else {
+			norm_i = i;
+		}
+		my_val += pieceLoctionToVal(
+			board[i][j],
+			norm_i,
+			j,
+			gamestate
+		);
 	}
 
 	for (tsquare square : op_locations) {
 		int i = std::get<0>(square);
 		int j = std::get<1>(square);
 		op_val += pieceToVal(board[i][j]);
+
+		int norm_i;
+		if (opponent == white) {
+			norm_i = 7-i;
+		} else {
+			norm_i = i;
+		}
+		op_val += pieceLoctionToVal(
+			board[i][j],
+			norm_i,
+			j,
+			gamestate
+		);
 	}
 
 	return (my_val - op_val);
@@ -1412,6 +1534,7 @@ std::string Board::pieceToFen(char piece) {
 	}
 
 }
+
 std::string Board::toFen() {
 	// Converts Board to fen
 	std::string fen = "";
