@@ -1,8 +1,8 @@
 
 #include <iostream>
 #include <set>
-#include "board.h"
-#include "util.h"
+#include "board/board.h"
+#include "board/util.h"
 
 
 tmove getUsersMove(Board& board) {
