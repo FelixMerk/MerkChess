@@ -31,7 +31,6 @@ typedef struct complete_move_info
 
 typedef struct minimax_val
 {
-
 	tmove move;
 	int val;
 	std::vector<tmove> pv;
@@ -50,16 +49,7 @@ class Board
 		int fullmove;
 		std::string en_passent;
 		tsquare king_pos;
-		/*
-		unsigned char pawn;
-		unsigned char bishop;
-		unsigned char knight;
-		unsigned char rook;
-		unsigned char queen;
-		unsigned char king;
-		unsigned char white;
-		unsigned char black;
-		*/
+
 	public:
 		unsigned char board[8][8];
 
@@ -78,7 +68,7 @@ class Board
 		std::string getNameOfSquare(tsquare square);
 		tsquare getSquareOfName(std::string name);
 
-		std::vector<tmove> stripIllegal(std::vector<tmove> moves);
+		std::vector<tmove> stripIllegal(const std::vector<tmove> &moves);
 		std::vector<tmove> getKnightMoves(tsquare square);
 		std::vector<tmove> getBishopMoves(tsquare square);
 		std::vector<tmove> getRookMoves(tsquare square);
@@ -92,7 +82,7 @@ class Board
 		bool sameRowOrColumn(tsquare sq_a, tsquare sq_b);
 		std::vector<tmove> stripByPin(
 			tsquare square,
-			std::vector<tmove> moves,
+			const std::vector<tmove> &moves,
 			tsquare pinner
 		);
 		bool isAbsolutePinned(tsquare square);
@@ -103,8 +93,8 @@ class Board
 		complete_move_info makeMove(tmove move);
 		void undoMove(complete_move_info info);
 		std::vector<tmove> orderMoves(
-			std::vector<tmove> moves,
-			std::vector<tmove> old_pv = {}
+			const std::vector<tmove> &moves,
+			const std::vector<tmove> &old_pv = {}
 		);
 
 		int evaluate();

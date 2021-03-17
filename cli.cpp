@@ -2,6 +2,7 @@
 #include <iostream>
 #include <set>
 #include "board.h"
+#include "util.h"
 
 
 tmove getUsersMove(Board& board) {
@@ -65,8 +66,12 @@ void moveMinimax(Board& board){
 std::vector<tmove> moveAlphaBeta(Board& board, std::vector<tmove> old_pv){
 	int alpha = -1000000;
 	int beta = 1000000;
+	// Pop our previous move and opponents move
 	if (!old_pv.empty()){
 		old_pv.pop_back();
+		if (!old_pv.empty()){
+			old_pv.pop_back();
+		}
 	}
 	auto info = board.alphabeta(6, alpha, beta, old_pv);
 	tmove move = info.move;
@@ -75,6 +80,13 @@ std::vector<tmove> moveAlphaBeta(Board& board, std::vector<tmove> old_pv){
 	tsquare source = std::get<0>(move);
 	tsquare dest = std::get<1>(move);
 	tpiece promo = std::get<2>(move);
+
+	std::cout << "Primary Variation:\n";
+	std::cout << "    Expect print errors deeper as board get out of sync:\n";
+	for (tmove pv_move : pv) {
+		std::cout << "    ";
+		printTmove(pv_move, board);
+	}
 
 	std::cout << board.getNameOfSquare(source) << " -> ";
 	std::cout << board.getNameOfSquare(dest) << " \n";

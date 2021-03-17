@@ -3,4 +3,5 @@
 *.o
 test_eval
 test_moves
+cli
 tmp*

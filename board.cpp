@@ -127,7 +127,7 @@ bool Board::sameRowOrColumn(tsquare sq_a, tsquare sq_b) {
 
 std::vector<tmove> Board::stripByPin(
 	tsquare square,
-	std::vector<tmove> moves,
+	const std::vector<tmove> &moves,
 	tsquare pinner
 ) {
 	// Use king_pos and otherwise legal moves to strip 
@@ -468,7 +468,7 @@ std::vector<tsquare> Board::getPieces() {
 	return locations;
 }
 
-std::vector<tmove> Board::stripIllegal(std::vector<tmove> moves) {
+std::vector<tmove> Board::stripIllegal(const std::vector<tmove> &moves) {
 	std::vector<tmove> legal_moves = {};
 	for (tmove move : moves) {
 		tsquare square = std::get<1>(move);
@@ -964,8 +964,8 @@ std::vector<tmove> Board::getMoves() {
 }
 
 std::vector<tmove> Board::orderMoves(
-	std::vector<tmove> moves,
-	std::vector<tmove> old_pv /*= {}*/
+	const std::vector<tmove> &moves,
+	const std::vector<tmove> &old_pv /*= {}*/
 ) {
 	std::vector<tmove> captures = {};
 	std::vector<tmove> pins = {};

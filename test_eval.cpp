@@ -2,27 +2,10 @@
 #include <iostream>
 #include <set>
 #include "board.h"
+#include "util.h"
 
 std::string fen_in1 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 std::string fen_in2 = "4k2r/8/8/8/8/8/8/2B1K3 w - - 0 1";
-
-void printTmove(
-	tmove move,
-	Board board
-) {
-	tsquare source = std::get<0>(move);
-	int i = std::get<0>(source);
-	int j = std::get<1>(source);
-	tpiece piece = board.board[i][j];
-
-	tsquare dest = std::get<1>(move);
-
-	tpiece promo = std::get<2>(move);
-	
-	std::cout << board.getPiece(piece) << " moves: ";	
-	std::cout << board.getNameOfSquare (source) << "->";
-	std::cout << board.getNameOfSquare (dest) << "\n";
-}
 
 tmove makeTmove(
 	std::string from,
