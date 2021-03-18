@@ -5,6 +5,6 @@
 #include <string>
 #include <vector>
 
-void printTmove(tmove move, Board board);
+void printTmove(tmove move, Board &board);
 
 #endif

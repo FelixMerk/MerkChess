@@ -4,7 +4,7 @@
 
 void printTmove(
 	tmove move,
-	Board board
+	Board &board
 ) {
 	tsquare source = std::get<0>(move);
 	int i = std::get<0>(source);

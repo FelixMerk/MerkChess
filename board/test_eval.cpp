@@ -107,12 +107,17 @@ bool do_alphabeta(
 ) {
 	Board board;
 	board.fromFen(fen);
+	std::cout << "Hash before: " << board.hash << "\n";
 
 	// auto stats = board.alphabeta(5, -1000000, 1000000);
 	auto stats = board.alphabeta(7, -1000000, 1000000);
+	//auto stats = board.alphabeta(9, -1000000, 1000000);
+	//auto stats = board.alphabeta(3, -1000000, 1000000);
 	tmove move = stats.move;
 	int val = stats.val;
 	std::vector<tmove> best_line = stats.pv;
+
+	std::cout << "Hash after: " << board.hash << "\n";
 
 	if (expected_move != move) {
 		std::cout << "Expect print errors deeper as board get out of sync:\n";
@@ -120,6 +125,7 @@ bool do_alphabeta(
 			printTmove(pv_move, board);
 		}
 
+		/*
 		std::cout << "Alpha Beta failure!\n";
 		std::cout << "Expected move:\n";
 		printTmove(expected_move, board);
@@ -127,9 +133,32 @@ bool do_alphabeta(
 		printTmove(move, board);
 		std::cout << "With value: " << val << "\n";
 		std::cout << fen << "\n";
+		*/
+
+
+		std::cout << "Debug1: " << board.debug_counter_a << "\n";
+		std::cout << "Debug2: " << board.debug_counter_b << "\n";
+		std::cout << "Debug3: " << board.debug_counter_c << "\n";
+		std::cout << "Debug4: " << board.debug_counter_d << "\n";
+
+
 		return false;
 	}
+
 	return true;
+}
+
+void do_move(
+	std::string fen
+) {
+	Board board;
+	board.fromFen(fen);
+	std::cout << "Hash before: " << board.hash << "\n";
+
+	auto info = board.makeMove(makeTmove("e1", "g1"));
+	board.undoMove(info);
+
+	std::cout << "Hash after: " << board.hash << "\n";
 }
 
 bool test_alphabeta(){
@@ -155,6 +184,9 @@ bool test_alphabeta(){
 	pass = pass and do_alphabeta(fen_unavoidable_mate, makeTmove("c8", "b8"));
 	*/
 
+	/*
+	//////
+	*/
 	std::string fen_losing = 
 		"r1b2rk1/ppp2ppp/2n5/2bpp3/7q/7N/PPPPPnPP/RNBQKB1R w Q - 0 10";
 	pass = pass and do_alphabeta(fen_losing, makeTmove("g2", "g3"));
@@ -163,6 +195,43 @@ bool test_alphabeta(){
 	std::string fen_find_mate =
 		"r1b2rk1/ppp2ppp/2n5/2bpp3/7q/7N/PPPPPnPP/RNBQKBR1 b Q - 1 10";
 	pass = pass and do_alphabeta(fen_find_mate, makeTmove("f2", "d3"));
+	*/
+
+
+	/*
+	std::string fen_drawn_endgame =
+		"8/8/1pk5/8/8/4KP2/8/8 w - - 0 1";
+	pass = pass and do_alphabeta(fen_drawn_endgame, makeTmove("e3", "d4"));
+	*/
+
+	/*
+	std::string fen_hash_iss = "8/8/3k4/1p6/2K5/5P2/8/8 w - - 0 3";
+	pass = pass and do_alphabeta(fen_hash_iss, makeTmove("e3", "d4"));
+	*/
+
+	/*
+	std::string fen_hash2 = "8/8/3k4/8/5P2/1K6/1p6/8 b - - 0 6";
+	pass = pass and do_alphabeta(fen_hash2, makeTmove("e3", "d4"));
+	std::string fen_hash2 = "1k6/8/8/8/5P2/K7/1p6/8 b - - 0 8";
+	pass = pass and do_alphabeta(fen_hash2, makeTmove("e3", "d4"));
+	std::string fen_hash2 = "k7/8/8/8/5P2/K7/1p6/8 b - - 0 10";
+	pass = pass and do_alphabeta(fen_hash2, makeTmove("e3", "d4"));
+	*/
+	/*
+	std::string fen_hash2 = 
+		"r1b2rk1/ppp2ppp/2n5/2bpp3/1P5q/7N/P1PPPnPP/RNBQKB1R b Q b3 0 10";
+	pass = pass and do_alphabeta(fen_hash2, makeTmove("e3", "d4"));
+	do_move(fen_hash2);
+	std::string fen_hash2 = 
+		"1rbqkbnr/pppp1ppp/2n1p3/8/4P3/3B1N2/PPPP1PPP/RNBQK2R w KQk - 0 4";
+	pass = pass and do_alphabeta(fen_hash2, makeTmove("e3", "d4"));
+	////////
+	std::string fen_hash2 = 
+		"1rbqkbnr/pppp1ppp/4p3/4n3/8/3B1N2/PPPP1PPP/RNBQK2R w KQk - 0 5";
+	pass = pass and do_alphabeta(fen_hash2, makeTmove("e3", "d4"));
+	std::string fen_hash2 = 
+		"1rbqkbn1/pppp1ppr/4p3/4n3/8/5N2/PPPP1PPP/RNBQK2R w KQ - 0 6";
+	do_move(fen_hash2);
 	*/
 
 	return pass;

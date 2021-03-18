@@ -73,10 +73,15 @@ std::vector<tmove> moveAlphaBeta(Board& board, std::vector<tmove> old_pv){
 			old_pv.pop_back();
 		}
 	}
+	std::vector<tmove> pv;
+	tmove move;
+	int val;
+	// for (int depth = 0; depth < 7; depth++) { }
 	auto info = board.alphabeta(6, alpha, beta, old_pv);
-	tmove move = info.move;
-	std::vector<tmove> pv = info.pv;
-	int val = info.val;
+	//auto info = board.alphabeta(4, alpha, beta, old_pv);
+	move = info.move;
+	pv = info.pv;
+	old_pv = pv;
 
 	tsquare source = std::get<0>(move);
 	tsquare dest = std::get<1>(move);
@@ -96,6 +101,8 @@ std::vector<tmove> moveAlphaBeta(Board& board, std::vector<tmove> old_pv){
 	}
 
 	board.makeMove(move);
+
+	// board.printBoard();
 	return pv;
 }
 

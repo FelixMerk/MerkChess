@@ -6,6 +6,9 @@
 #include <vector>
 #include <set>
 #include <algorithm>
+#include <unordered_map>
+
+#include "../hash/hash.h"
 
 typedef std::tuple<int, int> tsquare;
 typedef unsigned char tpiece;
@@ -36,6 +39,15 @@ typedef struct minimax_val
 	std::vector<tmove> pv;
 } minimax_val;
 
+typedef struct transposition_table_info
+{
+	unsigned long int hash;
+	tmove move; // PV move
+	int depth;
+	int score;
+	int type; // 0 = Exact, 1 = Beta (negamax has no alpha cutoff)
+} transposition_table_info;
+
 
 class Board
 {
@@ -50,7 +62,19 @@ class Board
 		std::string en_passent;
 		tsquare king_pos;
 
+		ZobristHash hasher;
+		std::unordered_map<unsigned int, transposition_table_info> 
+			trans_pos_table;
+
 	public:
+		// Make private?
+		unsigned long int hash;
+
+		int debug_counter_a;
+		int debug_counter_b;
+		int debug_counter_c;
+		int debug_counter_d;
+
 		unsigned char board[8][8];
 
 		void clearBoard();

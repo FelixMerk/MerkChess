@@ -824,7 +824,6 @@ bool test_perft() {
 	Board board;
 	int count;
 
-	/*
 	board.fromFen(fen_in1);
 
 	count = perft(2, board);
@@ -834,23 +833,17 @@ bool test_perft() {
 	count = perft(3, board);
 	pass = pass and count == 8902;
 	std::cout << count << "\n";
-	*/
 
 	// passes but takes a few seconds 
-	/*
-	count = perft(4, board);
-	pass = pass and count == 197281;
-	std::cout << count << "\n";
-	*/
+	//count = perft(4, board);
+	//pass = pass and count == 197281;
+	//std::cout << count << "\n";
 
 	// This takes a while, but we pass 4865609
-	/*
-	count = perft(5, board);
-	pass = pass and count == 4865609;
-	std::cout << count << "\n";
-	*/
+	//count = perft(5, board);
+	//pass = pass and count == 4865609;
+	//std::cout << count << "\n";
 
-	/*
 	// Kiwipete
 	std::string fen_perft2 = 
 		"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
@@ -887,7 +880,8 @@ bool test_perft() {
 	count = perft(4, board);
 	pass = pass and count == 43238;
 	std::cout << count << "\n";
-	*/
+
+	// Pos 4
 
 	std::string fen_perft4 = 
 		"r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1";
@@ -905,11 +899,10 @@ bool test_perft() {
 	pass = pass and count == 9467;
 	std::cout << count << "\n";
 
-	/* Works but takes a bit
-	count = perft(4, board);
-	pass = pass and count == 422333;
-	std::cout << count << "\n";
-	*/
+	// Works but takes a bit
+	// count = perft(4, board);
+	// pass = pass and count == 422333;
+	// std::cout << count << "\n";
 
 	// Pos 5
 	
@@ -929,11 +922,10 @@ bool test_perft() {
 	pass = pass and count == 62379;
 	std::cout << count << "\n";
 
-	/* Works but takes a bit
-	count = perft(4, board);
-	pass = pass and count == 2103487;
-	std::cout << count << "\n";
-	*/
+	// Works but takes a bit
+	//count = perft(4, board);
+	//pass = pass and count == 2103487;
+	//std::cout << count << "\n";
 
 	// Pos 6
 	
@@ -942,7 +934,7 @@ bool test_perft() {
 	board.fromFen(fen_perft6);
 
 	count = perft(1, board);
-	pass = pass and count == 44;
+	pass = pass and count == 46;
 	std::cout << count << "\n";
 
 	count = perft(2, board);
@@ -953,11 +945,10 @@ bool test_perft() {
 	pass = pass and count == 89890;
 	std::cout << count << "\n";
 
-	/* Works but takes a bit
-	count = perft(4, board);
-	pass = pass and count == 3894594;
-	std::cout << count << "\n";
-	*/
+	// Works but takes a bit
+	//count = perft(4, board);
+	//pass = pass and count == 3894594;
+	//std::cout << count << "\n";
 
 	/*
 	std::string fen_perft9 = 
@@ -1051,8 +1042,9 @@ int main() {
 	Board board;
 	board.fromFen(fen_in1);
 	//std::vector<tmove> moves = board.getMoves();
-
 	/*
+	*/
+
 	pass += test_fen();
 	pass += test_knight_moves();
 	pass += test_bishop_moves();
@@ -1072,12 +1064,11 @@ int main() {
 
 	pass += test_make_moves();
 	pass += test_move_counts();
-	*/
 
 	pass += test_perft();
 
-	//pass += test_ep_double_pin();
-	//pass += test_absolute_pin();
+	pass += test_ep_double_pin();
+	pass += test_absolute_pin();
 
 	return pass;
 }

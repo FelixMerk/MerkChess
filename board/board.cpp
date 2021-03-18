@@ -1,5 +1,6 @@
-#include <iostream>
 #include "board.h"
+
+#include <iostream>
 #include <bitset>
 #include <string>
 #include <ctype.h>
@@ -1229,6 +1230,45 @@ minimax_val Board::alphabeta(
 	int value = -9000000;
 	tmove best_move;
 	std::vector<tmove> best_line;
+	int cut_off_type = 0;
+	unsigned hash_key = hash >> 16;
+	unsigned long int hash_check = hash;
+
+
+	debug_counter_a += 1;
+
+	if (trans_pos_table.find(hash_key) != trans_pos_table.end()) {
+		// This position is hashed
+		transposition_table_info ttable_info = trans_pos_table[hash_key];
+
+		if (ttable_info.hash == hash) {
+			// Specific move is better than vector
+			// TODO: vector is unnecesary now?
+			old_pv = {ttable_info.move};
+
+			if (ttable_info.depth >= depth) {
+				// Depth as good or better
+				if (ttable_info.type == 0) {
+					// Exact score!
+					debug_counter_b += 1;
+					return {
+						ttable_info.move,
+						ttable_info.score
+					};
+				} else if (ttable_info.type == 1) {
+					// Score type is Beta:
+					// Lower bound for node
+					debug_counter_c += 1;
+					alpha = std::max(alpha, ttable_info.score);
+				}
+			}
+			// TODO: should we be checking beta > alpha here?
+			if (alpha >= beta) {
+				debug_counter_d += 1;
+				return {ttable_info.move, alpha, old_pv};
+			}
+		}
+	}
 
 	if (depth == 0) {
 		// Should qiuescent search on checks ...
@@ -1270,6 +1310,19 @@ minimax_val Board::alphabeta(
 			// Unmake
 			undoMove(info);
 
+			if (hash_check != hash) {
+				// Move broke code
+				std::cout << "Move failure Hash\n";
+				std::cout << toFen() << "\n";
+				std::cout << getNameOfSquare(std::get<0>(move)) << "\n";
+				std::cout << getNameOfSquare(std::get<1>(move)) << "\n";
+				std::cout << hash_check << "\n";
+				std::cout << hash << "\n";
+				hash_check = hash;
+			}
+			/*
+			*/
+
 			if (branch_val > value) {
 				/*
 				if (depth == 5) {
@@ -1293,11 +1346,20 @@ minimax_val Board::alphabeta(
 
 			alpha = std::max(value, alpha);
 			if (alpha >= beta) {
+				cut_off_type = 1;
 				break;
 			}
 		}
 	}
 
+	if (hash_check != hash) {
+		// code broke
+		std::cout << "FAILURE Hash\n";
+		std::cout << toFen() << "\n";
+		std::cout << hash_check << "\n";
+		std::cout << hash << "\n";
+	}
+	trans_pos_table[hash_key] = {hash, best_move, depth, value, cut_off_type};
 	best_line.push_back(best_move);
 	return {best_move, value, best_line};
 }
@@ -1334,14 +1396,28 @@ complete_move_info Board::makeMove(tmove move) {
 	// Move piece
 	board[di][dj] = spiece;
 
+	// Update hash
+	hash ^= hasher.zobrist[si][sj][spiece - 9];
+	if (dpiece) {
+		hash ^= hasher.zobrist[di][dj][dpiece - 9];
+	}
+
 	// Promotion
 	if (promotion != 0) {
 		board[di][dj] = promotion;
+		hash ^= hasher.zobrist[di][dj][promotion - 9];
+	} else {
+		hash ^= hasher.zobrist[di][dj][spiece - 9];
 	}
 	board[si][sj] = 0b0;
 
 
 	// En Passent
+	
+	if (en_passent != "") {
+		int ep_file = std::get<1>(getSquareOfName(en_passent));
+		hash ^= hasher.zobrist[ep_file][8][0];
+	}
 
 	if ((spiece == (pawn | to_play)) and
 		(en_passent != "") and
@@ -1350,9 +1426,11 @@ complete_move_info Board::makeMove(tmove move) {
 		// Took en_passent
 		if (to_play == white) {
 			board[di+1][dj] = 0b0;
+			hash ^= hasher.zobrist[di+1][dj][(black | pawn) - 9];
 		}
 		if (to_play == black) {
 			board[di-1][dj] = 0b0;
+			hash ^= hasher.zobrist[di-1][dj][(white | pawn) - 9];
 		}
 	}
 	en_passent = "";
@@ -1360,6 +1438,8 @@ complete_move_info Board::makeMove(tmove move) {
 		(std::abs(si-di) == 2)
 	) {
 		en_passent = getNameOfSquare(tsquare((si+di)/2,sj));
+		int ep_file = std::get<1>(getSquareOfName(en_passent));
+		hash ^= hasher.zobrist[ep_file][8][0];
 	}
 
 	// Castles
@@ -1374,17 +1454,31 @@ complete_move_info Board::makeMove(tmove move) {
 		}
 
 		board[si][rj] = 0b0;
+		hash ^= hasher.zobrist[si][rj][(rook | to_play) - 9];
 		board[si][(sj+dj)/2] = rook | to_play;
+		hash ^= hasher.zobrist[si][(sj+dj)/2][(rook | to_play) - 9];
 	}
 
 	// King moves
 	if (spiece == (king | to_play)) {
 		if (to_play == white){
-			white_kingside = 0;
-			white_queenside = 0;
+			if (white_kingside) {
+				hash ^= hasher.zobrist[0][9][0];
+				white_kingside = 0;
+			}
+			if (white_queenside) {
+				hash ^= hasher.zobrist[1][9][0];
+				white_queenside = 0;
+			}
 		} else if (to_play == black) {
-			black_kingside = 0;
-			black_queenside = 0;
+			if (black_kingside) {
+				hash ^= hasher.zobrist[2][9][0];
+				black_kingside = 0;
+			}
+			if (black_queenside) {
+				hash ^= hasher.zobrist[3][9][0];
+				black_queenside = 0;
+			}
 		}
 	}
 
@@ -1394,15 +1488,27 @@ complete_move_info Board::makeMove(tmove move) {
 	if (spiece == (rook | to_play)) {
 		if (to_play == white){
 			if (sj == 0 and si == 7) {
-				white_queenside = 0;
+				if (white_queenside) {
+					hash ^= hasher.zobrist[1][9][0];
+					white_queenside = 0;
+				}
 			} else if (sj == 7 and si == 7) {
-				white_kingside = 0;
+				if (white_kingside) {
+					hash ^= hasher.zobrist[0][9][0];
+					white_kingside = 0;
+				}
 			}
 		} else if (to_play == black) {
 			if (sj == 0 and si == 0) {
-				black_queenside = 0;
+				if (black_queenside) {
+					hash ^= hasher.zobrist[3][9][0];
+					black_queenside = 0;
+				}
 			} else if (sj == 7 and si == 0) {
-				black_kingside = 0;
+				if (black_kingside) {
+					hash ^= hasher.zobrist[2][9][0];
+					black_kingside = 0;
+				}
 			}
 		}
 	}
@@ -1411,15 +1517,27 @@ complete_move_info Board::makeMove(tmove move) {
 	if (dpiece == (rook | opponent)) {
 		if (opponent == white){
 			if (dj == 0 and di == 7) {
-				white_queenside = 0;
+				if (white_queenside) {
+					hash ^= hasher.zobrist[1][9][0];
+					white_queenside = 0;
+				}
 			} else if (dj == 7 and di == 7) {
-				white_kingside = 0;
+				if (white_kingside) {
+					hash ^= hasher.zobrist[0][9][0];
+					white_kingside = 0;
+				}
 			}
 		} else if (opponent == black) {
 			if (dj == 0 and di == 0) {
-				black_queenside = 0;
+				if (black_queenside) {
+					hash ^= hasher.zobrist[3][9][0];
+					black_queenside = 0;
+				}
 			} else if (dj == 7 and di == 0) {
-				black_kingside = 0;
+				if (black_kingside) {
+					hash ^= hasher.zobrist[2][9][0];
+					black_kingside = 0;
+				}
 			}
 		}
 	}
@@ -1427,6 +1545,7 @@ complete_move_info Board::makeMove(tmove move) {
 	// Switch colors
 	if (to_play == white) { to_play = black; }
 	else { to_play = white; fullmove++; }
+	hash ^= hasher.zobrist[0][8][1];
 
 	return info;
 }
@@ -1466,8 +1585,27 @@ void Board::undoMove(
 	board[si][sj] = dpiece;
 	board[di][dj] = piece;
 
+	// Update hash
+	hash ^= hasher.zobrist[di][dj][dpiece - 9];
+	if (piece) {
+		// we took a piece, need to return it
+		hash ^= hasher.zobrist[di][dj][piece - 9];
+	}
+
 
 	// Castling rights
+	if (white_queenside != Q) {
+		hash ^= hasher.zobrist[1][9][0];
+	}
+	if (white_kingside != K) {
+		hash ^= hasher.zobrist[0][9][0];
+	}
+	if (black_queenside != q) {
+		hash ^= hasher.zobrist[3][9][0];
+	}
+	if (black_kingside != k) {
+		hash ^= hasher.zobrist[2][9][0];
+	}
 	white_kingside = K;
 	white_queenside = Q;
 	black_kingside = k;
@@ -1477,6 +1615,9 @@ void Board::undoMove(
 	// Promotion
 	if (promotion != 0) {
 		board[si][sj] = pawn | opponent;
+		hash ^= hasher.zobrist[si][sj][(pawn | opponent) - 9];
+	} else {
+		hash ^= hasher.zobrist[si][sj][dpiece - 9];
 	}
 
 
@@ -1489,10 +1630,22 @@ void Board::undoMove(
 		// Took en_passent
 		if (opponent == white) {
 			board[di+1][dj] = pawn | to_play;
+			hash ^= hasher.zobrist[di+1][dj][(pawn | to_play) - 9];
 		}
 		if (opponent == black) {
 			board[di-1][dj] = pawn | to_play;
+			hash ^= hasher.zobrist[di-1][dj][(pawn | to_play) - 9];
 		}
+	}
+	if (en_passent != "") {
+		// Remove
+		int ep_file = std::get<1>(getSquareOfName(en_passent));
+		hash ^= hasher.zobrist[ep_file][8][0];
+	}
+	if (ep != "") {
+		// Add
+		int ep_file = std::get<1>(getSquareOfName(ep));
+		hash ^= hasher.zobrist[ep_file][8][0];
 	}
 	en_passent = ep;
 
@@ -1509,11 +1662,16 @@ void Board::undoMove(
 
 		board[si][rj] = rook | opponent;
 		board[si][(sj+dj)/2] = 0b0;
+
+
+		hash ^= hasher.zobrist[si][rj][(rook | opponent) - 9];
+		hash ^= hasher.zobrist[si][(sj+dj)/2][(rook | opponent) - 9];
 	}
 
 	// Switch colors
 	if (to_play == white) { to_play = black; fullmove--; }
 	else { to_play = white; }
+	hash ^= hasher.zobrist[0][8][1];
 }
 		
 std::string Board::pieceToFen(char piece) {
@@ -1598,11 +1756,23 @@ std::string Board::toFen() {
 }
 
 void Board::fromFen(std::string fen) {
+	// Sets Board to fen and inits game
 	clearBoard();
+
 	halfmove = -1;
 	to_play = 0;
 	std::string collecting_halfmoves = "";
-	// Sets Board to fen
+
+	// Init zobrist
+	hasher.initTable();
+	//TODO: set unordered_map::reserve
+	//
+	//
+	debug_counter_a = 0;
+	debug_counter_b = 0;
+	debug_counter_c = 0;
+	debug_counter_d = 0;
+
 	int i = 0;
 	int j = 0;
 	int piece_end = 0;
@@ -1715,4 +1885,14 @@ void Board::fromFen(std::string fen) {
 		}
 	}
 
+	// Get hash
+	hash = hasher.zHash(
+		board,
+		to_play==white,
+		std::get<1>(getSquareOfName(en_passent)),
+		white_kingside,
+		white_queenside,
+		black_kingside,
+		black_queenside
+	);
 }
