@@ -7,4 +7,9 @@
 
 void printTmove(tmove move, Board &board);
 
+tmove sortkthMove(
+	std::list<scored_move> &scored_moves,
+	int k
+);
+
 #endif

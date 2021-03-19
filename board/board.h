@@ -7,6 +7,7 @@
 #include <set>
 #include <algorithm>
 #include <unordered_map>
+#include <list>
 
 #include "../hash/hash.h"
 
@@ -38,6 +39,12 @@ typedef struct minimax_val
 	int val;
 	std::vector<tmove> pv;
 } minimax_val;
+
+typedef struct scored_move
+{
+	tmove move;
+	int score;
+} scored_move;
 
 typedef struct transposition_table_info
 {
@@ -119,6 +126,12 @@ class Board
 		std::vector<tmove> orderMoves(
 			const std::vector<tmove> &moves,
 			const std::vector<tmove> &old_pv = {}
+		);
+
+		int scoreMove(tmove move);
+		std::list<scored_move> scoreMoves(
+			const std::vector<tmove> &moves,
+			tmove hint = {}
 		);
 
 		int evaluate();

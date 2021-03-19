@@ -3,5 +3,6 @@
 *.o
 test_eval
 test_moves
+test_util
 cli
 tmp*

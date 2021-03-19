@@ -1,5 +1,7 @@
 #include "board.h"
 
+#include "util.h"
+
 #include <iostream>
 #include <bitset>
 #include <string>
@@ -964,6 +966,73 @@ std::vector<tmove> Board::getMoves() {
 	return moves;
 }
 
+int pieceToVal(tpiece piece) {
+	int p = 1000;
+	switch(piece & 0b111) {
+		case Board::pawn:
+			return p;
+		case Board::bishop: 
+			return 3*p;
+		case Board::knight: 
+			return 3*p;
+		case Board::rook:
+			return 5*p;
+		case Board::queen:
+			return 9*p;
+		case Board::king: 
+			// Leaving your king in check is illegal anyway
+			return 9000*p;
+		default:
+			return 0;
+	}
+}
+
+
+int Board::scoreMove(tmove move) {
+	// MvvLva
+	// Most Valuable Victim
+	// Least Valuable Attacker
+	tsquare source = std::get<0>(move);
+	int si = std::get<0>(source);
+	int sj = std::get<1>(source);
+	tpiece spiece = board[si][sj];
+	int sval = pieceToVal(spiece);
+
+	tsquare dest = std::get<1>(move);
+	int di = std::get<0>(dest);
+	int dj = std::get<1>(dest);
+	tpiece dpiece = board[di][dj];
+	int dval = pieceToVal(dpiece);
+
+	if (dpiece) {
+		return (dval + (sval >> 2));
+	} else if (
+		sameDiagonal(king_pos, dest) or
+		sameRowOrColumn(king_pos, dest)
+	) {
+		return 50;
+	} else {
+		return 0;
+	}
+}
+
+std::list<scored_move> Board::scoreMoves(
+	const std::vector<tmove> &moves,
+	tmove hint
+) {
+	std::list<scored_move> scored_moves = {};
+	for (tmove move : moves) {
+		int score;
+		if (move == hint) {
+			score = 20000;
+		} else {
+			score = scoreMove(move);
+		}
+		scored_moves.push_back({move, score});
+	}
+	return scored_moves;
+}
+
 std::vector<tmove> Board::orderMoves(
 	const std::vector<tmove> &moves,
 	const std::vector<tmove> &old_pv /*= {}*/
@@ -1005,27 +1074,6 @@ std::vector<tmove> Board::orderMoves(
 	captures.insert(captures.end(), pins.begin(), pins.end());
 	captures.insert(captures.end(), boring_moves.begin(), boring_moves.end());
 	return captures;
-}
-
-int pieceToVal(tpiece piece) {
-	int p = 1000;
-	switch(piece & 0b111) {
-		case Board::pawn:
-			return p;
-		case Board::bishop: 
-			return 3*p;
-		case Board::knight: 
-			return 3*p;
-		case Board::rook:
-			return 5*p;
-		case Board::queen:
-			return 9*p;
-		case Board::king: 
-			// Leaving your king in check is illegal anyway
-			return 9000*p;
-		default:
-			return 0;
-	}
 }
 
 int pieceLoctionToVal(tpiece piece, int i, int j, int gamestate) {
@@ -1288,12 +1336,17 @@ minimax_val Board::alphabeta(
 			}
 		}
 
-		moves = orderMoves(moves, old_pv);
+		//moves = orderMoves(moves, old_pv);
+		std::list<scored_move> scored_moves;
 		if (old_pv.size() > 0) {
+			scored_moves = scoreMoves(moves, old_pv.back());
 			old_pv.pop_back();
+		} else {
+			scored_moves = scoreMoves(moves, {});
 		}
 			
-		for (tmove move : moves) {
+		for (int move_index = 0; move_index < scored_moves.size(); move_index++) {
+			tmove move = sortkthMove(scored_moves, move_index);
 			// Make
 			complete_move_info info = makeMove(move);
 

@@ -31,6 +31,12 @@ util.o: board/util.cpp board/util.h
 hash.o: hash/hash.cpp hash/hash.h
 	g++ -c hash/hash.cpp --std=c++11
 
+test_util: test_util.o util.o board.o hash.o
+	g++ -o test_util test_util.o util.o board.o hash.o --std=c++11
+
+test_util.o: board/test_util.cpp
+	g++ -c board/test_util.cpp --std=c++11
+
 clean:
 	rm -f cli cli.o board.o
 	rm -f test_eval test_eval.o

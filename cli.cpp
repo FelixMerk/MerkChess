@@ -81,6 +81,7 @@ std::vector<tmove> moveAlphaBeta(Board& board, std::vector<tmove> old_pv){
 	//auto info = board.alphabeta(4, alpha, beta, old_pv);
 	move = info.move;
 	pv = info.pv;
+	val = info.val;
 	old_pv = pv;
 
 	tsquare source = std::get<0>(move);

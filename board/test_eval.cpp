@@ -112,7 +112,7 @@ bool do_alphabeta(
 	// auto stats = board.alphabeta(5, -1000000, 1000000);
 	auto stats = board.alphabeta(7, -1000000, 1000000);
 	//auto stats = board.alphabeta(9, -1000000, 1000000);
-	//auto stats = board.alphabeta(3, -1000000, 1000000);
+	//auto stats = board.alphabeta(5, -1000000, 1000000);
 	tmove move = stats.move;
 	int val = stats.val;
 	std::vector<tmove> best_line = stats.pv;
@@ -225,7 +225,9 @@ bool test_alphabeta(){
 	std::string fen_hash2 = 
 		"1rbqkbnr/pppp1ppp/2n1p3/8/4P3/3B1N2/PPPP1PPP/RNBQK2R w KQk - 0 4";
 	pass = pass and do_alphabeta(fen_hash2, makeTmove("e3", "d4"));
+	*/
 	////////
+	/*
 	std::string fen_hash2 = 
 		"1rbqkbnr/pppp1ppp/4p3/4n3/8/3B1N2/PPPP1PPP/RNBQK2R w KQk - 0 5";
 	pass = pass and do_alphabeta(fen_hash2, makeTmove("e3", "d4"));
